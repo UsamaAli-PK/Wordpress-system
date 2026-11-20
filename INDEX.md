@@ -134,6 +134,7 @@ Master routing table for documentation, standards, playbooks, and templates.
 - [documentation/APPROACH.md](file:///root/Desktop/learn/BAse/documentation/APPROACH.md) — Reproducible 9-step audit and reconnaissance strategy with exact grep commands.
 - [Astra Theme Audit](file:///root/Desktop/learn/BAse/documentation/themes/astra/01-overview.md) — Complete 5-document mapping covering architecture, dynamic CSS compositor, 650 hooks, and extraction recipes.
 - [Premium Addons Audit](file:///root/Desktop/learn/BAse/documentation/plugins/premium-addons-for-elementor/01-overview.md) — Complete 5-document mapping covering MCP REST API, OAuth, assets scanner, and widget deep dives.
+- [Travelin' Website Audit](file:///root/Desktop/learn/BAse/documentation/external-projects/travelin-website.md) — Full stack Next.js 16 + Payload CMS + Tailwind 4 mapping, page routes, and candidate conversion components (3D Globe, Arc Gallery, Reviews, Hero).
 
 ---
 

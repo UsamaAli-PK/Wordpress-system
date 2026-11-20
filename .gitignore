@@ -15,6 +15,7 @@ application-passwords.txt
 
 # Vendor Archives & Large Test Downloads
 /workspace/downloads/
+/workspace/external-projects/
 *.zip
 
 # Database dumps & Logs
