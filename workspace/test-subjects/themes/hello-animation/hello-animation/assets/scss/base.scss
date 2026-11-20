@@ -1,0 +1,20 @@
+/**
+ * base — everything a page needs before it needs anything else.
+ *
+ * The :root custom properties, typography, animation keyframes, the spacing
+ * scale, the layout primitives and the button. chrome.css and blog.css are both
+ * enqueued with this as a dependency, so it is the only one of the three that
+ * may emit :root.
+ *
+ * These three are the whole build. The single master.scss they replaced is
+ * gone: between them they emit exactly the rules it did (903 either way), and
+ * keeping it would have meant a 100 KB stylesheet nothing enqueued going stale
+ * every time a partial changed.
+ */
+@import "utils/variables";
+@import "utils/typography";
+@import "utils/animation";
+@import "utils/space";
+@import "layout/base";
+@import "components/button";
+@import "utils/rtl";

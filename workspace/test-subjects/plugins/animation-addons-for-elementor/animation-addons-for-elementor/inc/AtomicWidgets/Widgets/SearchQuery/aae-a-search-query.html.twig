@@ -1,0 +1,32 @@
+{# AAE Search Query — design-less dynamic leaf.
+   The chosen HTML tag IS the root, so it carries the base-style scope and the
+   Style-tab classes itself (same as Post Title). With a wrapper <div> the
+   Style tab only reached the wrapper, and the Kit/theme heading rules
+   (`.elementor-kit-N h2 { color; font-size }`) set on the inner heading beat
+   the inherited values — color/typography never showed. The query term and
+   filter rows inherit the root's styling; filters are block <span>s because a
+   <div> is not valid inside a heading. #}
+{% set allowed_tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'] %}
+{% set tag = settings.header_size | default('h2') %}
+{% if tag not in allowed_tags %}{% set tag = 'h2' %}{% endif %}
+{% set classes = ['aae-a-search-query', 'e-atomic-element', base_styles.base | default('')] | merge(settings.classes | default([])) | join(' ') %}
+
+<{{ tag }} class="{{ classes }} {{ editor_classes | default('') }}"
+    data-id="{{ id }}"
+    data-e-type="{{ type }}"
+    data-interaction-id="{{ interaction_id | default('') }}"
+    {% if settings._cssid is defined and settings._cssid is not empty %}
+        id="{{ settings._cssid | e('html_attr') }}"
+    {% endif %}
+    {% if settings.attributes is defined and settings.attributes is not empty %}
+        {{ settings.attributes | raw }}
+    {% endif %}
+    {{ editor_attributes | default('') | raw }}>
+    {{ settings.search_text | default('') }}
+    <span class="aae-a-search-query-term">{{ settings.query_term | default('') }}</span>
+    {% if settings.filters is defined and settings.filters is not empty %}
+        {% for filter in settings.filters %}
+            <span class="aae-a-search-query-filter" style="display:block;">{{ filter }}</span>
+        {% endfor %}
+    {% endif %}
+</{{ tag }}>

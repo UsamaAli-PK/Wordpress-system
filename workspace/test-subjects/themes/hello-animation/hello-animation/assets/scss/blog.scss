@@ -1,0 +1,14 @@
+/**
+ * blog — posts, archives, single, comments, pagination and the sidebar widgets.
+ *
+ * The big one, and the whole reason for splitting: _blog.scss alone is 2,437 of
+ * the theme's 4,436 compiled lines, and on a page Elementor lays out, not one
+ * of them matches anything.
+ *
+ * Breakpoints only, no :root — see chrome.scss.
+ */
+@import "utils/breakpoints";
+@import "utils/motion";
+@import "layout/blog";
+@import "components/widgets";
+@import "layout/blog-motion";

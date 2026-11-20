@@ -1,0 +1,2072 @@
+<?php
+
+namespace Wealcoder\AnimationAddons;
+
+use Wealcoder\AnimationAddons\Nonce;
+use Elementor\Plugin as ElementorPlugin;
+use Wealcoder\AnimationAddons\INC\WPML as WPML;
+
+if (! defined('ABSPATH')) {
+	exit;
+} // Exit if accessed directly
+
+/**
+ * Class Plugin
+ *
+ * Main Plugin class
+ *
+ * @since 1.2.0
+ */
+
+class Plugin
+{
+
+	public $categories;
+
+	/**
+	 * Registered widget element name => dashboard widget key.
+	 * Filled while widgets register (free and pro), so Elementor's
+	 * Element Manager names can be translated back to aaeaddon_save_widgets keys.
+	 */
+	public static $widget_element_keys = array();
+	/**
+	 * Plugin version.
+	 *
+	 * Holds the current plugin version.
+	 *
+	 * @access public
+	 * @static
+	 *
+	 * @var string Plugin version.
+	 */
+	use \Wealcoder\AnimationAddons\Aaeaddon_Extension_Widgets_Trait;
+
+	const LIBRARY_OPTION_KEY = 'aaeaddon_templates_library';
+
+	/**
+	 * Carrier handle for generated inline CSS (Custom Fonts, category colours).
+	 * Has no stylesheet of its own and is always enqueued, so inline CSS never
+	 * depends on whether the legacy v3 stylesheet happens to be loaded.
+	 */
+	const INLINE_STYLE_HANDLE = 'aae-inline-styles';
+
+	/**
+	 * API templates URL.
+	 *
+	 * Holds the URL of the templates API.
+	 *
+	 * @access public
+	 * @static
+	 *
+	 * @var string API URL.
+	 */
+
+	public $api_url = 'https://block.animation-addons.com/wp-json/api/v2/list';
+
+	/**
+	 * The block library host, without a trailing slash.
+	 *
+	 * @return string
+	 */
+	public static function block_library_host() {
+		return untrailingslashit( AAEADDON_BLOCK_LIBRARY_URL );
+	}
+
+	/**
+	 * Which eras this site actually USES — an era is on when at least one of
+	 * its widgets is switched on. Decided on the saved widget options alone:
+	 * an extension does not make a section renderable, so it does not count.
+	 *
+	 * The editor's Template Library uses this for the DEFAULT its Version
+	 * filter opens on and for one hint line, and for nothing else — every
+	 * version is always listed and always in the filter. It briefly hid the
+	 * unused era instead, which left a V4 site with no way to reach the V3
+	 * catalogue and no control on screen saying one existed; the dependency
+	 * dialog on Insert already offers to switch on whatever a template needs,
+	 * so there was never anything to protect against.
+	 *
+	 * @return array{v3:bool,v4:bool}
+	 */
+	public static function template_library_eras() {
+		$v3 = count( self::get_widgets() ) > 0;
+		$v4 = false;
+
+		if ( class_exists( '\Wealcoder\AnimationAddons\AtomicWidgets\Atomic' ) ) {
+			$counts = \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->count_active_atomic();
+			$v4     = ! empty( $counts['widgets'] );
+		}
+
+		return [
+			'v3' => $v3,
+			'v4' => $v4,
+		];
+	}
+
+	/**
+	 * Instance
+	 *
+	 * @since 1.0.0
+	 * @access private
+	 * @static
+	 *
+	 * @var Plugin The single instance of the class.
+	 */
+	private static $instance = null;
+
+	/**
+	 * Instance
+	 *
+	 * Ensures only one instance of the class is loaded or can be loaded.
+	 *
+	 * @return Plugin An instance of the class.
+	 * @since 1.2.0
+	 * @access public
+	 */
+
+	private $preview_post_id = null;
+
+	public static function instance()
+	{
+		if (is_null(self::$instance)) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	function get_elementor_breakpoints()
+	{
+
+		// Default fallback (always safe)
+		$fallback = [
+			'desktop' => 1400,
+			'laptop'  => 1366,
+			'tablet'  => 1024,
+			'mobile'  => 767,
+		];
+
+		// Elementor not loaded
+		if (! class_exists('\Elementor\Plugin')) {
+			return $fallback;
+		}
+
+		$plugin = \Elementor\Plugin::$instance ?? null;
+
+		if (! $plugin || ! isset($plugin->breakpoints)) {
+			return $fallback;
+		}
+
+		$manager = $plugin->breakpoints;
+
+		// Elementor does NOT have laptop breakpoint
+		$settings = [
+			'laptop' => method_exists($manager, 'get_breakpoints')
+				? $manager->get_breakpoints('laptop')->get_value()
+				: $fallback['laptop'],
+
+			'tablet'  => method_exists($manager, 'get_breakpoints')
+				? $manager->get_breakpoints('tablet')->get_value()
+				: $fallback['tablet'],
+
+			'mobile'  => method_exists($manager, 'get_breakpoints')
+				? $manager->get_breakpoints('mobile')->get_value()
+				: $fallback['mobile'],
+		];
+
+		// Custom laptop breakpoint (Elementor does NOT provide this)
+		$settings['desktop'] = 1400;
+
+		return $settings;
+	}
+
+	/**
+	 * Widget_scripts
+	 *
+	 * Load required plugin core files.
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 */
+	public function widget_scripts()
+	{
+		$scripts = array(
+			// Inline-only carrier handle: no file of its own — `'src' => false`.
+			//
+			// assets/js/wcf-addons.min.js is a ZERO-BYTE file (so is its unminified
+			// source), and pointing the handle at it cost every visitor one HTTP
+			// round trip per page view to download nothing.
+			//
+			// The HANDLE is emphatically not dead, which is why it is registered
+			// rather than removed. It has two live consumers:
+			//   - wp_localize_script() below attaches WCF_ADDONS_JS to it, and
+			//     WordPress prints that inline block only for a registered,
+			//     enqueued handle.
+			//   - Pro declares 'wcf--addons' as a dependency of 'wcf--addons-ex'
+			//     (its class-plugin.php), and dependency resolution is independent
+			//     of src, so a false-src parent still orders the child correctly.
+			//
+			// If real code is ever added to wcf-addons.min.js, restore the filename
+			// here. check-empty-assets.php fails on the inverse mistake — a handle
+			// still pointing at a file that builds to nothing.
+			'wcf-addons-core' => array(
+				'handler' => 'wcf--addons',
+				'src'     => false,
+				'dep'     => array(),
+				'version' => false,
+				'arg'     => false,
+			),
+		);
+
+		foreach ($scripts as $key => $script) {
+			$src = false === $script['src']
+				? false
+				: plugins_url('/assets/js/' . $script['src'], __FILE__);
+
+			wp_register_script($script['handler'], $src, $script['dep'], self::asset_version($script['version']), $script['arg']);
+		}
+
+		$data = apply_filters(
+			'wcf-addons/js/data', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+			array(
+				'ajaxUrl'        => admin_url('admin-ajax.php'),
+				'_wpnonce'       => Nonce::create( Nonce::FRONTEND ),
+				'post_id'        => get_the_ID(),
+				// The admin-ajax actions this plugin answers, for a script that
+				// is not ours to rebuild -- the Pro runtime reads these and falls
+				// back to the pre-4.2 spelling when the key is absent (older free).
+				'actions'        => array(
+					'live_search'        => 'aaeaddon_live_search',
+					'load_popup_content' => 'aaeaddon_load_popup_content',
+					'mailchimp_ajax'     => 'aaeaddon_mailchimp_ajax',
+					'post_shares'        => 'aaeaddon_post_shares',
+					'loop_grid_page'     => 'aaeaddon_loop_grid_page',
+				),
+				'i18n'           => array(
+					'okay'    => esc_html__('Okay', 'animation-addons-for-elementor'),
+					'cancel'  => esc_html__('Cancel', 'animation-addons-for-elementor'),
+					'submit'  => esc_html__('Submit', 'animation-addons-for-elementor'),
+					'success' => esc_html__('Success', 'animation-addons-for-elementor'),
+					'warning' => esc_html__('Warning', 'animation-addons-for-elementor'),
+				),
+				'smoothScroller' => json_decode(get_option('aaeaddon_smooth_scroller')),
+				'mode'           => \Elementor\Plugin::$instance->editor->is_edit_mode(),
+				'elementor_breakpoint' => $this->get_elementor_breakpoints()
+			)
+		);
+
+		wp_localize_script('wcf--addons', 'WCF_ADDONS_JS', $data);
+
+		// Only the v3 widgets/extensions consume wcf--addons (and the WCF_ADDONS_JS
+		// data attached to it). Nothing in the v4 atomic layer references either,
+		// so with the legacy layer switched off neither needs to ship.
+		if (self::has_active_legacy_assets()) {
+			wp_enqueue_script('wcf--addons');
+		}
+		// widget scripts
+		$widget_scripts = self::get_widget_scripts();
+		if (is_array($widget_scripts)) {
+			foreach ($widget_scripts as $key => $script) {
+				wp_register_script($script['handler'], plugins_url('/assets/js/' . $script['src'], __FILE__), $script['dep'], self::asset_version($script['version']), $script['arg']);
+			}
+		}
+
+		if (aaeaddon_pro_defined( 'VERSION' ) && version_compare(aaeaddon_pro_constant( 'VERSION' ), '2.4.14', '<=')) {
+			wp_enqueue_script('aae--switcher-toggle');
+		}
+	}
+
+	/**
+	 * Function widget_styles
+	 *
+	 * Load required plugin core files.
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 */
+	public static function widget_styles()
+	{
+		$styles = array(
+			'wcf-addons-core' => array(
+				'handler' => 'wcf--addons',
+				'src'     => 'wcf-addons.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+		);
+
+		foreach ($styles as $key => $style) {
+			wp_register_style($style['handler'], plugins_url('/assets/css/' . $style['src'], __FILE__), $style['dep'], self::asset_version($style['version']), $style['media']);
+		}
+
+		// Inline-only carrier handle: no file of its own, always enqueued.
+		// Custom Fonts and the category colour fields attach generated CSS with
+		// wp_add_inline_style(), and WordPress DISCARDS inline CSS whose parent
+		// handle is not enqueued — silently. They used to hang off wcf--addons,
+		// which meant that 6.5 KB legacy stylesheet had to ship on every page
+		// just to carry them. Now they have their own handle and wcf--addons is
+		// free to load only when the legacy layer is actually in use.
+		wp_register_style(self::INLINE_STYLE_HANDLE, false, array(), AAEADDON_VERSION);
+		wp_enqueue_style(self::INLINE_STYLE_HANDLE);
+
+		// The core legacy stylesheet is only needed by v3 widgets/extensions.
+		if (self::has_active_legacy_assets()) {
+			wp_enqueue_style('wcf--addons');
+		}
+
+		// widget style
+		foreach (self::get_widget_style() as $key => $style) {
+			wp_register_style($style['handler'], plugins_url('/assets/css/' . $style['src'], __FILE__), $style['dep'], self::asset_version($style['version']), $style['media']);
+		}
+	}
+
+	/**
+	 * Resolve an asset version for wp_register_script()/wp_register_style().
+	 *
+	 * Most entries in the script/style tables declare `'version' => false`. Passing
+	 * false to WordPress does NOT mean "no version" — WP substitutes $wp_version,
+	 * so every asset shipped as ?ver=<WordPress version>. Cache busting was then
+	 * tied to WordPress updates rather than to this plugin: ship new CSS/JS and
+	 * browsers and CDNs keep serving the old file until WP itself updates.
+	 *
+	 * Falls back to the plugin version. Truthy values are passed through untouched
+	 * so entries that deliberately use filemtime()/time() keep their behaviour.
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 * @static
+	 *
+	 * @param mixed $version Version declared in the asset table.
+	 * @return string Version string to register with.
+	 */
+	public static function asset_version($version)
+	{
+		return $version ? $version : AAEADDON_VERSION;
+	}
+
+	/**
+	 * Editor scripts
+	 *
+	 * Enqueue plugin javascripts integrations for Elementor editor.
+	 *
+	 * @since 1.2.1
+	 * @access public
+	 */
+	public function editor_scripts()
+	{
+		wp_enqueue_script(
+			'aae-nested-sl',
+			AAEADDON_URL . 'assets/build/modules/nested-slider/editor/index.js',
+			array(
+				'nested-elements',
+				'elementor-editor',
+				'elementor-common',
+				'wp-element',
+				'jquery',
+			),
+			//time(),
+			AAEADDON_VERSION,
+			true
+		);
+		wp_enqueue_script(
+			'wcf-editor',
+			plugins_url('/assets/js/editor.min.js', __FILE__),
+			array(
+				'elementor-editor',
+			),
+			AAEADDON_VERSION,
+			true
+		);
+
+		$data = apply_filters(
+			'wcf-addons-editor/js/data', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+			array(
+				'ajaxUrl'  => admin_url('admin-ajax.php'),
+				'_wpnonce' => Nonce::create( Nonce::EDITOR ),
+			)
+		);
+
+		wp_localize_script('wcf-editor', 'WCF_Addons_Editor', $data);
+
+		// templates Library
+		if (class_exists('\Wealcoder\AnimationAddons\Library_Source')) {
+			// Versioned by file time as well as release: this bundle changes
+			// between releases and a browser holding ?ver=<release> kept
+			// serving the previous one (measured: the era rule and the
+			// dependency dialog absent in a browser that had the old file).
+			$library_js  = AAEADDON_PATH . 'assets/js/wcf-template-library.js';
+			$library_css = AAEADDON_PATH . 'assets/css/wcf-template-library.css';
+			$library_ver = static function ( $file ) {
+				return AAEADDON_VERSION . ( file_exists( $file ) ? '.' . filemtime( $file ) : '' );
+			};
+
+			wp_enqueue_script(
+				'wcf-template-library',
+				plugins_url('/assets/js/wcf-template-library.js', __FILE__),
+				array(
+					'jquery',
+					'wp-util',
+				),
+				$library_ver( $library_js ),
+				true
+			);
+
+			wp_localize_script(
+				'wcf-template-library',
+				'WCF_TEMPLATE_LIBRARY',
+				array(
+					'ajaxurl'        => admin_url('admin-ajax.php'),
+					'template_types' => self::get_template_types(),
+					'nonce'          => Nonce::create( Nonce::TEMPLATE_LIBRARY ),
+					'dashboard_link' => admin_url('admin.php?page=aaeaddon_settings'),
+					'config'         => apply_filters('wcf_addons_editor_config', array()), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+					'pro_installed'  => file_exists(WP_PLUGIN_DIR . '/animation-addons-for-elementor-pro/animation-addons-for-elementor-pro'), // change below code at version 2.5.9
+					'pro_active' 	 => aaeaddon_pro_defined( 'VERSION' ),
+					// Whether THIS editor can insert a V4 (atomic) block: Elementor's
+					// atomic experiment is on. Decides the Version filter's default
+					// (V4 here, V3 otherwise) and whether a V4 card's Insert is offered.
+					'atomic_available' => \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::is_elementor_atomic_active(),
+					// The block library host (AAEADDON_BLOCK_LIBRARY_URL; a staging
+					// site overrides it in wp-config.php to a local copy).
+					'block_host'       => self::block_library_host(),
+					// Which eras this site USES. Decides which version the filter
+					// opens on and one hint line — never what is listed or
+					// offered. See template_library_eras().
+					'eras'             => self::template_library_eras(),
+					'widgets_link'     => admin_url( 'admin.php?page=aaeaddon_settings&tab=widgets' ),
+					'i18n'           => array(
+						'needs_v4'        => esc_html__( 'Needs Elementor V4 (atomic elements) to insert', 'animation-addons-for-elementor' ),
+						'v4'              => esc_html__( 'V4', 'animation-addons-for-elementor' ),
+						'animated'        => esc_html__( 'Animated', 'animation-addons-for-elementor' ),
+						'insert'          => esc_html__( 'Insert', 'animation-addons-for-elementor' ),
+						/* translators: %s: comma-separated list of widget names. */
+						'switched_on'     => esc_html__( 'Switched on %s. Saving and reloading the editor to finish the insert…', 'animation-addons-for-elementor' ),
+						/* translators: %s: comma-separated list of widget names. */
+						'missing_widgets' => esc_html__( 'This block uses widgets that are switched off on this site (%s). An administrator has to switch them on in Animation Addons → Widgets before it can be inserted.', 'animation-addons-for-elementor' ),
+						/* translators: %d: number of images. */
+						'linked'          => esc_html__( '%d image(s) could not be copied and stay linked to the template server.', 'animation-addons-for-elementor' ),
+						'failed'          => esc_html__( 'The block could not be inserted.', 'animation-addons-for-elementor' ),
+						'empty'           => esc_html__( 'No templates found.', 'animation-addons-for-elementor' ),
+						'empty_v4'        => esc_html__( 'No Elementor V4 blocks in this list yet — switch the version filter to V3 or All.', 'animation-addons-for-elementor' ),
+						'empty_v4_pages'  => esc_html__( 'No Elementor V4 pages in this list yet — switch the version filter to V3 or All.', 'animation-addons-for-elementor' ),
+						// The load-more footer. The bundle's sprintf() understands
+						// %1$s / %2$s, so a translation may reorder them.
+						/* translators: 1: how many are on screen, 2: how many match the filter. */
+						'showing'         => esc_html__( 'Showing %1$s of %2$s — keep scrolling for more', 'animation-addons-for-elementor' ),
+						/* translators: %s: how many templates match the filter. */
+						'all_shown'       => esc_html__( 'All %s shown', 'animation-addons-for-elementor' ),
+						// The hint under the toolbar when the list can show cards from
+						// an era whose every widget is switched off. They still insert.
+						/* translators: %s: link to the Widgets screen. */
+						'era_off_v3'      => esc_html__( 'Every Elementor V3 widget is switched off on this site. V3 sections still insert — the editor offers to switch on the widgets each one needs. You can also switch them on first in %s.', 'animation-addons-for-elementor' ),
+						/* translators: %s: link to the Widgets screen. */
+						'era_off_v4'      => esc_html__( 'Every Elementor V4 widget is switched off on this site. V4 blocks still insert — the editor offers to switch on the widgets each one needs. You can also switch them on first in %s.', 'animation-addons-for-elementor' ),
+						'widgets_screen'  => esc_html__( 'Animation Addons → Widgets', 'animation-addons-for-elementor' ),
+						// The dependency dialog: what the block/page needs that is off.
+						'deps_title'      => esc_html__( 'This template uses widgets that are switched off', 'animation-addons-for-elementor' ),
+						'deps_body'       => esc_html__( 'Switch them on to insert it. The editor saves and reloads once to register them.', 'animation-addons-for-elementor' ),
+						'deps_body_admin' => esc_html__( 'An administrator has to switch them on in Animation Addons → Widgets before it can be inserted.', 'animation-addons-for-elementor' ),
+						'deps_enable'     => esc_html__( 'Switch on & insert', 'animation-addons-for-elementor' ),
+						'deps_cancel'     => esc_html__( 'Cancel', 'animation-addons-for-elementor' ),
+						'deps_close'      => esc_html__( 'Close', 'animation-addons-for-elementor' ),
+						'deps_widget'     => esc_html__( 'Widget', 'animation-addons-for-elementor' ),
+						'deps_extension'  => esc_html__( 'Extension', 'animation-addons-for-elementor' ),
+						'deps_unavailable' => esc_html__( 'Not available on this site — needs Animation Addons Pro', 'animation-addons-for-elementor' ),
+						'deps_unavailable_note' => esc_html__( 'The parts marked as unavailable will be left out of the insert.', 'animation-addons-for-elementor' ),
+					),
+					// 'pro_installed'  => array_key_exists('animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php', get_plugins()),
+					// 'pro_active'     => aaeaddon_pro_defined( 'VERSION' ) && array_key_exists('animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php', get_plugins()),
+				)
+			);
+
+			wp_enqueue_style(
+				'wcf-template-library',
+				plugins_url('/assets/css/wcf-template-library.css', __FILE__),
+				array(),
+				$library_ver( $library_css )
+			);
+		}
+	}
+
+	/**
+	 * Editor style
+	 *
+	 * Enqueue plugin css integrations for Elementor editor.
+	 *
+	 * @since 1.2.1
+	 * @access public
+	 */
+	public function editor_styles()
+	{
+		wp_enqueue_style('wcf--editor', plugins_url('/assets/css/editor.min.css', __FILE__), array(), AAEADDON_VERSION, 'all');
+	}
+
+	/**
+	 * Function widget_scripts
+	 *
+	 * Load required plugin core files.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public static function get_widget_scripts()
+	{
+		
+
+		return apply_filters(
+			'aae/lite/widgets/scripts', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+			array(
+				'ProgressBar'          => array(
+					'handler' => 'progressbar',
+					'src'     => 'progressbar.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'slider'               => array(
+					'handler' => 'wcf--slider',
+					'src'     => 'widgets/slider.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'typewriter'           => array(
+					'handler' => 'wcf--typewriter',
+					'src'     => 'widgets/typewriter.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'text-hover-image'     => array(
+					'handler' => 'wcf--text-hover-image',
+					'src'     => 'widgets/text-hover-image.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'counter'              => array(
+					'handler' => 'wcf--counter',
+					'src'     => 'widgets/counter.min.js',
+					'dep'     => array('jquery-numerator'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'nested-slider'        => array(
+					'handler' => 'aae--nested-slider',
+					'src'     => 'widgets/aae-slider-frontend.min.js',
+					'dep'     => array('jquery-numerator'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'socials-shares'       => array(
+					'handler' => 'wcf--socials-share',
+					'src'     => 'widgets/social-share.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'progressbar'          => array(
+					'handler' => 'wcf--progressbar',
+					'src'     => 'widgets/progressbar.min.js',
+					'dep'     => array('progressbar'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+
+				'tabs'                 => array(
+					'handler' => 'wcf--tabs',
+					'src'     => 'widgets/tabs.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'nav-menu'             => array(
+					'handler' => 'wcf--nav-menu',
+					'src'     => 'widgets/nav-menu.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'animated-heading'     => array(
+					'handler' => 'wcf--animated-heading',
+					'src'     => 'widgets/animated-heading.min.js',
+					'dep'     => aaeaddon_pro_defined( 'VERSION' ) ? array('gsap') : array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'video-posts-tab'      => array(
+					'handler' => 'aae-video-posts-tab',
+					'src'     => 'widgets/video-posts-tab.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'search'               => array(
+					'handler' => 'aae--search',
+					'src'     => 'widgets/search.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'contact-form-7'       => array(
+					'handler' => 'aae--contact-form',
+					'src'     => 'widgets/contact-form.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'image-hotspot'        => array(
+					'handler' => 'aae-image-hotspot',
+					'src'     => 'widgets/image-hotspot.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'image-gallery'        => array(
+					'handler' => 'wcf--image-gallery-js',
+					'src'     => 'widgets/image-gallery.min.js',
+					'dep'     => array('jquery'),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'wcf-posts'            => array(
+					'handler' => 'wcf--posts',
+					'src'     => 'widgets/post-pro.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'button-pro'           => array(
+					'handler' => 'aae--button-pro',
+					'src'     => 'widgets/button-pro.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'category-slider'      => array(
+					'handler' => 'wcf--category-slider',
+					'src'     => 'widgets/category-slider.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'feature-posts'        => array(
+					'handler' => 'wcf--posts',
+					'src'     => 'widgets/post.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'wcf--a-accordion'     => array(
+					'handler' => 'wcf--a-accordion',
+					'src'     => 'widgets/advance-accordion.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'filterable-slider'    => array(
+					'handler' => 'wcf--filterable-slider',
+					'src'     => 'widgets/filterable-slider.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'notification'         => array(
+					'handler' => 'aae-notification',
+					'src'     => 'widgets/notification.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'post-rating'          => array(
+					'handler' => 'aae-post-rating',
+					'src'     => 'widgets/post-rating.min.js',
+					'dep'     => array( 'jquery' ),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'post-reactions-js'    => array(
+					'handler' => 'wcf--post-reactions',
+					'src'     => 'widgets/post-reactions.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'team-slider'          => array(
+					'handler' => 'wcf--team-slider',
+					'src'     => 'widgets/team-slider.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'image-compare'        => array(
+					'handler' => 'wcf--image-compare',
+					'src'     => 'widgets/image-compare.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'mailchimp-script'     => array(
+					'handler' => 'wcf--mailchimp',
+					'src'     => 'widgets/mailchimp.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'click-drop'           => array(
+					'handler' => 'wcf--click-drop',
+					'src'     => 'widgets/click-drop.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'wcf--countdown'       => array(
+					'handler' => 'wcf-countdown-script',
+					'src'     => 'widgets/countdown.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'aae--switcher-toggle' => array(
+					'handler' => 'aae--switcher-toggle',
+					'src'     => 'widgets/toggle-switch.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+				'wcf-image-accordion'  => array(
+					'handler' => 'wcf--image-accordion',
+					'src'     => 'widgets/image-accordion.min.js',
+					'dep'     => array(),
+					'version' => AAEADDON_VERSION,
+					'arg'     => true,
+				),
+
+			)
+		);
+	}
+
+	/**
+	 * Function widget_style
+	 *
+	 * Load required plugin core files.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public static function get_widget_style()
+	{
+
+		return array(
+			'icon-box'           => array(
+				'handler' => 'wcf--icon-box',
+				'src'     => 'widgets/icon-box.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'testimonial'        => array(
+				'handler' => 'wcf--testimonial',
+				'src'     => 'widgets/testimonial.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'testimonial2'       => array(
+				'handler' => 'wcf--testimonial2',
+				'src'     => 'widgets/testimonial2.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'testimonial3'       => array(
+				'handler' => 'wcf--testimonial3',
+				'src'     => 'widgets/testimonial3.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'posts'              => array(
+				'handler' => 'wcf--posts',
+				'src'     => 'widgets/posts.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'button'             => array(
+				'handler' => 'wcf--button',
+				'src'     => 'widgets/button.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'progressbar'        => array(
+				'handler' => 'wcf--progressbar',
+				'src'     => 'widgets/progressbar.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'counter'            => array(
+				'handler' => 'wcf--counter',
+				'src'     => 'widgets/counter.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'brand-slider'       => array(
+				'handler' => 'wcf--brand-slider',
+				'src'     => 'widgets/brand-slider.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'text-hover-image'   => array(
+				'handler' => 'wcf--text-hover-image',
+				'src'     => 'widgets/text-hover-image.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'one-page-nav'       => array(
+				'handler' => 'wcf--one-page-nav',
+				'src'     => 'widgets/one-page-nav.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'social-icons'       => array(
+				'handler' => 'wcf--social-icons',
+				'src'     => 'widgets/social-icons.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'image-gallery'      => array(
+				'handler' => 'wcf--image-gallery',
+				'src'     => 'widgets/image-gallery.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'team'               => array(
+				'handler' => 'wcf--team',
+				'src'     => 'widgets/team.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'image-box'          => array(
+				'handler' => 'wcf--image-box',
+				'src'     => 'widgets/image-box.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'timeline'           => array(
+				'handler' => 'wcf--timeline',
+				'src'     => 'widgets/timeline.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'event-slider'       => array(
+				'handler' => 'wcf--event-slider',
+				'src'     => 'widgets/event-slider.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'services-tab'       => array(
+				'handler' => 'wcf--services-tab',
+				'src'     => 'widgets/services-tab.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'countdown'          => array(
+				'handler' => 'wcf--countdown',
+				'src'     => 'widgets/countdown.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'meta-info'          => array(
+				'handler' => 'wcf--meta-info',
+				'src'     => 'widgets/meta-info.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'video-posts-tab'    => array(
+				'handler' => 'aae-video-posts-tab',
+				'src'     => 'widgets/video-posts-tab.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+
+			// 'search' is deliberately absent, for the same reason as 'nav-menu'
+			// above: assets/src/scss/widgets/search.scss is 337 lines with every one
+			// commented out, because those rules now live in the inline <style>
+			// block the widget prints itself. The build therefore emits a
+			// stylesheet containing only a sourceMappingURL comment.
+			//
+			// Checked against both plugins: Pro does not reference 'aae--search' at
+			// all, nothing hangs inline CSS on it, and the only other hits are
+			// `.aae--search-filter` CSS SELECTORS inside the widget, which are
+			// unrelated to the handle. The SCRIPT handle of the same name stays —
+			// assets/js/widgets/search.min.js is 4 KB of real code.
+			'image-hotspot'      => array(
+				'handler' => 'aae-image-hotspot',
+				'src'     => 'widgets/image-hotspot.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'clickdrop'          => array(
+				'handler' => 'aae-clickdrop',
+				'src'     => 'widgets/clickdrop.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'author-box'         => array(
+				'handler' => 'wcf--author-box',
+				'src'     => 'widgets/author-box.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'posts-pro'          => array(
+				'handler' => 'wcf--post-pro',
+				'src'     => 'widgets/posts-pro.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'button-pro'         => array(
+				'handler' => 'aae--button-pro',
+				'src'     => 'widgets/button-pro.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'category-showcase'  => array(
+				'handler' => 'wcf--category-showcase',
+				'src'     => 'widgets/category-showcase.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'feature-posts'      => array(
+				'handler' => 'wcf--post-pro',
+				'src'     => 'widgets/posts.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'grid-hover-posts'   => array(
+				'handler' => 'aaeaddon-grid-hover-posts',
+				'src'     => 'widgets/grid-hover-posts.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'wcf--a-accordion'   => array(
+				'handler' => 'wcf--a-accordion',
+				'src'     => 'widgets/advance-accordion.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'aae-a-testimonial'  => array(
+				'handler' => 'aae-a-testimonial',
+				'src'     => 'widgets/advanced-testimonial.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'filterable-slider'  => array(
+				'handler' => 'wcf--filterable-slider',
+				'src'     => 'widgets/filterable-slider.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'filterable-gallery' => array(
+				'handler' => 'wcf--filterable-gallery',
+				'src'     => 'widgets/filterable-gallery.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'image-accordion'    => array(
+				'handler' => 'wcf--image-accordion',
+				'src'     => 'widgets/image-accordion.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'notification'       => array(
+				'handler' => 'aae-notification',
+				'src'     => 'widgets/notification.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'post-rating'        => array(
+				'handler' => 'aae-post-rating',
+				'src'     => 'widgets/post-rating.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'post-reactions-css' => array(
+				'handler' => 'wcf--post-reactions',
+				'src'     => 'widgets/post-reaction.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'post-timeline'      => array(
+				'handler' => 'aae-post-timeline',
+				'src'     => 'widgets/post-timeline.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'table-of-content'   => array(
+				'handler' => 'wcf--table-of-content',
+				'src'     => 'widgets/table-of-content.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'team-slider'        => array(
+				'handler' => 'wcf--team-slider',
+				'src'     => 'widgets/team-slider.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'toggle-switch'      => array(
+				'handler' => 'wcf--toggle-switch',
+				'src'     => 'widgets/toggle-switch.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'image-compare'      => array(
+				'handler' => 'wcf--image-compare',
+				'src'     => 'widgets/image-compare.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'post-comment'       => array(
+				'handler' => 'wcf--post-comment',
+				'src'     => 'widgets/post-comment.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			'mailchimp'          => array(
+				'handler' => 'wcf--mailchimp',
+				'src'     => 'widgets/mailchimp.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+			// 'nav-menu' is deliberately absent. assets/src/scss/widgets/nav-menu.scss
+			// is 353 lines with every one of them commented out, so the build emits
+			// a stylesheet containing nothing but a sourceMappingURL comment — and
+			// registering it shipped that empty file to every visitor of every page
+			// carrying a nav menu.
+			//
+			// Checked against both plugins before removing: nothing declares
+			// 'wcf--nav-menu' as a style dependency, enqueues it, or hangs inline CSS
+			// on it. Pro's only mention is an Elementor control hook
+			// (elementor/element/wcf--nav-menu/...) keyed on the WIDGET NAME, which
+			// is unrelated to the style handle, and the WPML entry is a
+			// widget-to-translatable-fields map. The widget keeps its SCRIPT handle
+			// of the same name — that file is real.
+			//
+			// To bring it back: uncomment the SCSS, rebuild, and restore the entry.
+			'loop-grid'          => array(
+				'handler' => 'wcf--loop-grid',
+				'src'     => 'widgets/loop-grid.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+
+			'advance-pricing-table' => array(
+				'handler' => 'wcf--advance-pricing-table',
+				'src'     => 'widgets/advance-pricing-table.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+
+			'weather'               => array(
+				'handler' => 'aae--weather',
+				'src'     => 'widgets/weather.min.css',
+				'dep'     => array(),
+				'version' => false,
+				'media'   => 'all',
+			),
+		);
+	}
+
+	/**
+	 * Register Widgets
+	 *
+	 * Register new Elementor widgets.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	public function register_widgets()
+	{
+	
+		foreach (self::get_widgets() as $slug => $data) {
+
+			// If upcoming don't register.
+			if ($data['is_upcoming']) {
+				continue;
+			}
+
+			if ($data['is_pro']) {
+				continue;
+			}
+
+			if (file_exists(__DIR__ . '/widgets/' . $slug . '/' . $slug . '.php') || file_exists(__DIR__ . '/widgets/' . $slug . '.php')) {
+
+				if (! $data['is_pro'] && ! $data['is_extension']) {
+
+					if (is_dir(__DIR__ . '/widgets/' . $slug)) {
+						require_once __DIR__ . '/widgets/' . $slug . '/' . $slug . '.php';
+					} else {
+						require_once __DIR__ . '/widgets/' . $slug . '.php';
+					}
+
+					$class = explode('-', $slug);
+					$class = array_map('ucfirst', $class);
+					$class = implode('_', $class);
+					$class = 'Wealcoder\\AnimationAddons\\Widgets\\' . $class;
+
+					$widget = new $class();
+					self::$widget_element_keys[$widget->get_name()] = $slug;
+					ElementorPlugin::instance()->widgets_manager->register($widget);
+				}
+			}
+		}
+
+		// Atomic
+	}
+
+	/**
+	 * Register Widgets
+	 *
+	 * Register new Elementor Extensions.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 */
+	/**
+	 * The free extension modules register_extensions() can load, by dashboard
+	 * slug. Used to be derived as `inc/class-wcf-<slug>.php` + file_exists();
+	 * naming them stops a future `inc/class-<something>.php` from being picked
+	 * up because a slug happens to match it.
+	 */
+	const EXTENSION_MODULES = array(
+		'custom-cpt'   => 'inc/class-custom-cpt.php',
+		'custom-css'   => 'inc/class-custom-css.php',
+		'custom-fonts' => 'inc/class-custom-fonts.php',
+		'custom-icon'  => 'inc/class-custom-icon.php',
+		'dynamic-tags' => 'inc/class-dynamic-tags.php',
+	);
+
+	public function register_extensions()
+	{
+
+		foreach (self::get_extensions() as $slug => $data) {
+
+			// If upcoming don't register.
+			if ($data['is_upcoming']) {
+				continue;
+			}
+
+			if (! $data['is_pro'] && ! $data['is_extension'] && isset(self::EXTENSION_MODULES[$slug])) {
+				include_once AAEADDON_PATH . self::EXTENSION_MODULES[$slug];
+			}
+		}
+
+		/*
+		 * Custom Fonts / Post Type Builder / Custom Icon also have a card on the
+		 * V4 (Atomic) Extensions screen, so honour that toggle as well.
+		 *
+		 * They are not v3-only features: a font uploaded here is offered by the
+		 * atomic Typography control, a post type built here is what an atomic
+		 * Loop Grid queries. Loading exclusively from the v3 list above meant a
+		 * site running purely on v4 — every legacy extension switched off — had
+		 * no way to reach any of them. Dynamic Tags is gated the same way: it
+		 * moved here from the Pro plugin, whose register_extensions() carries
+		 * the same v4 toggle for the Pro-only tags.
+		 *
+		 * This is an OR, not a replacement: an existing v3 site is unaffected,
+		 * and `include_once` plus each file's own class_exists() guard make a
+		 * double hit from both lists a no-op.
+		 *
+		 * Safe to call Atomic::instance() here — include_files() has already run
+		 * \Wealcoder\AnimationAddons\Atomic\Bootstrap::init(), which loads the class, before it
+		 * calls this method.
+		 */
+		if (class_exists('\Wealcoder\AnimationAddons\AtomicWidgets\Atomic')) {
+			$atomic = \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance();
+
+			foreach (['custom-fonts', 'custom-cpt', 'custom-icon', 'dynamic-tags'] as $slug) {
+				if (! $atomic->is_extension_active($slug)) {
+					continue;
+				}
+
+				include_once AAEADDON_PATH . self::EXTENSION_MODULES[$slug];
+			}
+		}
+	}
+
+	/**
+	 * Widget Category
+	 *
+	 * @param $elements_manager
+	 */
+	public function widget_categories($elements_manager)
+	{
+
+	
+
+		$categories = array();
+
+		$categories['weal-coder-addon'] = array(
+			'title' => esc_html__('AAE', 'animation-addons-for-elementor'),
+			'icon'  => 'fa fa-plug',
+		);
+
+		$categories['wcf-hf-addon'] = array(
+			'title' => __('AAE Header & Footer', 'animation-addons-for-elementor'),
+			'icon'  => 'fa fa-plug',
+		);
+
+		$categories['wcf-archive-addon'] = array(
+			'title' => esc_html__('AAE Archive', 'animation-addons-for-elementor'),
+			'icon'  => 'fa fa-plug',
+		);
+
+		$categories['wcf-search-addon'] = array(
+			'title' => esc_html__('AAE Search', 'animation-addons-for-elementor'),
+			'icon'  => 'fa fa-plug',
+		);
+
+		$categories['wcf-single-addon'] = array(
+			'title' => esc_html__('AAE Single', 'animation-addons-for-elementor'),
+			'icon'  => 'fa fa-plug',
+		);
+
+		$old_categories = $elements_manager->get_categories();
+
+		$top_categories = array();
+		foreach (array('layout', 'basic') as $top_key) {
+			if (isset($old_categories[$top_key])) {
+				$top_categories[$top_key] = $old_categories[$top_key];
+				unset($old_categories[$top_key]);
+			}
+		}
+
+		$categories = array_merge($top_categories, $categories, $old_categories);
+
+		$set_categories = function ($categories) {
+			$this->categories = $categories;
+		};
+
+		$set_categories->call($elements_manager, $categories);
+	}
+
+	/**
+	 * Include Plugin files
+	 *
+	 * @access private
+	 */
+	private function include_files()
+	{
+
+		//require_once AAEADDON_PATH . 'config.php';
+		require_once AAEADDON_PATH . 'inc/helper.php';
+
+		// One class, no side effects, no hooks -- it only answers "register the
+		// bundled webfonts and tell me the handle" for the admin stylesheets
+		// that depend on them. Required unconditionally because the screens that
+		// ask for it (notices, code snippet, custom icon, CPT builder) each load
+		// through a different path, and a dependency that is not registered
+		// causes WordPress to silently skip the dependent stylesheet.
+		require_once AAEADDON_PATH . 'inc/admin/class-fonts.php';
+
+		if (is_admin()) {
+			if (get_option('aaeaddon_setup_wizard') !== 'complete') {
+				require_once AAEADDON_PATH . 'inc/admin/setup-wizard.php';
+			}
+			require_once AAEADDON_PATH . 'inc/admin/dashboard.php';
+		}
+
+		// Only load theme builder when needed. added this condition at v-2.6.0
+		if (is_admin() || ! wp_doing_ajax()) {
+			require_once AAEADDON_PATH . 'inc/theme-builder/theme-builder.php';
+		}
+
+		require_once AAEADDON_PATH . 'inc/hook.php';
+		require_once AAEADDON_PATH . 'inc/class-blacklist.php';
+		require_once AAEADDON_PATH . 'inc/ajax-handler.php';
+
+		// Loaded unconditionally, not just in admin: the front end and the Pro
+		// plugin both read Animation_Settings to decide which renderer owns a
+		// feature, so the class has to exist on every request.
+		require_once AAEADDON_PATH . 'inc/AnimationSettings/class-animation-settings.php';
+		\Wealcoder\AnimationAddons\AnimationSettings\Animation_Settings::instance();
+
+		\Wealcoder\AnimationAddons\Atomic\Bootstrap::init();
+		\Wealcoder\AnimationAddons\Forms\Bootstrap::init();
+
+		/*
+		 * Template Library -- switchable from EITHER dashboard, like Code Snippet
+		 * below and the three admin extensions in register_extensions().
+		 *
+		 * The modal inserts V3 sections AND V4 blocks, so it belongs to no era.
+		 * Until 2026-09-21 only the atomic toggle was read, while the v3
+		 * General Extensions tab kept showing a "Template library" card that
+		 * nothing consulted -- a site with that card ON and the atomic list
+		 * empty had no library in the editor and no error anywhere.
+		 *
+		 * This is the ONLY require of class-template-library.php in the
+		 * plugin, and that file is the only require of inc/library-source.php —
+		 * so this line is what decides whether \Wealcoder\AnimationAddons\Library_Source exists,
+		 * and therefore whether the two class_exists() checks below (the editor
+		 * script enqueue, and the print_templates/preview_styles hooks) fire at
+		 * all. Before this gate existed nothing required the file, so the whole
+		 * feature was unreachable no matter what any setting said.
+		 *
+		 * Safe to call Atomic::instance() this early: Bootstrap::init() directly
+		 * above already loads the class (defensively requiring it, since
+		 * animation-addons-for-elementor.php only requires it AFTER
+		 * class-plugin.php) and calls instance() itself.
+		 */
+		$template_library_active = aaeaddon_get_settings('aaeaddon_save_extensions', 'template-library')
+			|| \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->is_extension_active('template-library');
+
+		if ($template_library_active) {
+			require_once AAEADDON_PATH . 'inc/class-template-library.php';
+		}
+
+		/*
+		 * Code Snippet — switchable from EITHER dashboard.
+		 *
+		 * Snippets are site-wide PHP/CSS/JS, nothing to do with which widget era
+		 * a page is built in, so gating them on the v3 extension list alone left
+		 * a v4-only site with no way to reach the feature. The v3 check is kept
+		 * first and unchanged, so an existing site is unaffected.
+		 *
+		 * These three includes moved down here from the is_admin() block above
+		 * purely because Atomic::instance() is only safe to call after
+		 * \Wealcoder\AnimationAddons\Atomic\Bootstrap::init() has loaded the class. Nothing in
+		 * CodeSnippet.php runs at file scope beyond its own singleton, which
+		 * registers admin_menu/ajax hooks that fire long after plugins_loaded.
+		 */
+		$code_snippet_active = aaeaddon_get_settings('aaeaddon_save_extensions', 'code-snippet')
+			|| \Wealcoder\AnimationAddons\AtomicWidgets\Atomic::instance()->is_extension_active('code-snippet');
+
+		if ($code_snippet_active) {
+			if (is_admin()) {
+				// Include CodeSnippet Admin functionality.
+				include_once AAEADDON_PATH . 'inc/CodeSnippet/CodeSnippet.php';
+			}
+
+			// Include CodeSnippet frontend functionality.
+			include_once AAEADDON_PATH . 'inc/CodeSnippet/CodeSnippetFrontend.php';
+			include_once AAEADDON_PATH . 'inc/CodeSnippet/CodeSnippetCompatibility.php';
+		}
+
+		// The four widget traits (Post_Query, Button, Slider, Nested_Slider) used to
+		// be included here, 123 KB parsed on every request. Their files are named
+		// after their classes now, so Composer's PSR-4 map loads each one at the
+		// moment a widget class that `use`s it is DECLARED -- which is what PHP
+		// already does for a trait. A request that registers no v3 widget (REST,
+		// admin-ajax, a page with no Elementor content) now parses none of them.
+		//
+		// It also makes the pre-4.2 aliases for those trait names resolve on demand
+		// instead of only after this include had run.
+		include_once AAEADDON_PATH . 'inc/post-rating-handler.php';
+		include_once AAEADDON_PATH . 'inc/category-fields.php';
+
+		// The Page Import screen. Every hook it registers is an admin one, and
+		// its single front-end-capable hook -- pre_get_posts -- opens with
+		// `is_admin() && 'edit.php' === $pagenow`, so on a visitor's request the
+		// class was parsed to do nothing at all.
+		if (is_admin()) {
+			include_once AAEADDON_PATH . 'inc/admin/page-import.php';
+		}
+
+		include_once AAEADDON_PATH . 'widgets/mailchimp/mailchimp-api.php';
+		include_once AAEADDON_PATH . 'inc/class-starter-animations.php';
+
+
+		// Load Loop Builder Integration.
+		require_once AAEADDON_PATH . 'widgets/loop-builder/init.php';
+
+
+		$wpml_file = AAEADDON_PATH . 'inc/wpml-manager.php';
+
+		if (defined('ICL_SITEPRESS_VERSION') && file_exists($wpml_file)) {
+			include_once $wpml_file;
+		}
+
+
+		// extensions.
+		$this->register_extensions();
+	}
+
+	// public function elementor_editor_url($url)
+	// {
+	// 	$args         = array(
+	// 		'numberposts' => 1,
+	// 		'post_type'   => 'post',
+	// 		'orderby'     => 'menu_order',
+	// 		'order'       => 'ASC',
+	// 	);
+	// 	$latest_posts = get_posts($args);
+	// 	if (! is_wp_error($latest_posts) && ! empty($latest_posts) && isset($latest_posts[0])) {
+	// 		return add_query_arg('aaeid', $latest_posts[0]->ID, $url);
+	// 	}
+	// 	return add_query_arg('aaeid', 1, $url);
+	// }
+
+
+	public function elementor_editor_url($url)
+	{
+
+		// If already fetched, reuse it
+		if ($this->preview_post_id !== null) {
+			return add_query_arg('aaeid', $this->preview_post_id, $url);
+		}
+
+		$args = [
+			'numberposts' => 1,
+			'post_type'   => 'post',
+			'orderby'     => 'menu_order',
+			'order'       => 'ASC',
+			'fields'      => 'ids', // performance optimization
+		];
+
+		$posts = get_posts($args);
+
+		$this->preview_post_id = (!empty($posts)) ? $posts[0] : 1;
+
+		return add_query_arg('aaeid', $this->preview_post_id, $url);
+	}
+
+	public function print_templates()
+	{
+		$all_plugins    = get_plugins();
+		$plugin_slug    = 'animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php';
+		$active_plugins = get_option('active_plugins');
+		$dahsboard_link = admin_url('admin.php?page=aaeaddon_settings');
+?>
+		<script type="text/template" id="tmpl-wcf-templates-header">
+			<div class="dialog-header dialog-lightbox-header">
+				<div class="elementor-templates-modal__header wcf-template-library--header">
+					<div class="elementor-templates-modal__header__logo-area"></div>
+					<div class="elementor-templates-modal__header__menu-area" data-disabled="false">
+						<div id="elementor-template-library-header-menu">
+							<#
+							let i = 0;
+							_.each( data.template_types, function( item, key ) {
+							#>
+							<div class="elementor-component-tab elementor-template-library-menu-item {{ 0==i ? 'elementor-active' : ''}}" data-tab="{{ key }}">
+								{{{ item.label }}}
+							</div>
+							<#
+							i ++ ;
+							} );
+							#>
+						</div>
+					</div>
+					<div class="elementor-templates-modal__header__items-area">
+						<div class="elementor-templates-modal__header__close elementor-templates-modal__header__close--normal elementor-templates-modal__header__item">
+							<i class="eicon-close" aria-hidden="true" title="Close"></i>
+							<span class="elementor-screen-only"><?php echo esc_html__('Close', 'animation-addons-for-elementor'); ?></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tmpl-wcf-templates">
+			<div class="dialog-message dialog-lightbox-message">
+				<div class="dialog-content dialog-lightbox-content">
+					<div class="elementor-template-library-templates">
+						<!--toolbar-->
+						<div id="elementor-template-library-toolbar">
+							<div style="display: flex; align-items: center; gap: 10px">
+															<div id="elementor-template-library-filter-toolbar-remote" class="elementor-template-library-filter-toolbar">
+								<div id="elementor-template-library-filter">
+									<select id="wcf-template-library-filter-subtype" class="elementor-template-library-filter-select"  tabindex="-1">
+										<option value=""><?php echo esc_html__('Category', 'animation-addons-for-elementor'); ?></option>
+										<#
+										_.each( data.categories, function( item, key ) {
+										#>
+										<option value="{{item.id}}">{{ item.name }}</option>
+										<#
+										} );
+										#>
+									</select>
+								</div>
+								</div>
+								<div id="elementor-template-library-color-toolbar-remote" class="elementor-template-library-color-toolbar">
+								<div id="elementor-template-library-color">
+									<select id="wcf-template-library-color-subtype" class="elementor-template-library-color-select"  tabindex="-1">
+																			<option value="">All</option>
+										<option value="lite">Light</option>
+										<option value="dark">Dark</option>
+									</select>
+								</div>
+								</div>
+								<div id="elementor-template-library-builder-toolbar-remote" class="elementor-template-library-color-toolbar">
+								<div id="elementor-template-library-builder">
+									<select id="wcf-template-library-builder" class="elementor-template-library-color-select" data-aae-builder-filter tabindex="-1">
+										<option value="all"><?php echo esc_html__('All versions', 'animation-addons-for-elementor'); ?></option>
+										<option value="v3"><?php echo esc_html__('Elementor V3', 'animation-addons-for-elementor'); ?></option>
+										<option value="v4"><?php echo esc_html__('Elementor V4 (Atomic)', 'animation-addons-for-elementor'); ?></option>
+									</select>
+								</div>
+								</div>
+														
+														</div>
+							<div id="elementor-template-library-filter-text-wrapper">
+								<label for="wcf-template-library-filter-text" class="elementor-screen-only"><?php echo esc_html__('Search Templates:', 'animation-addons-for-elementor'); ?></label>
+								<input id="wcf-template-library-filter-text" placeholder="Search">
+								<i class="eicon-search"></i>
+							</div>
+						</div>
+
+						<!--templates -->
+						<div class="wcf-library-templates">
+							<#
+							_.each( data.templates, function( item, key ) {
+							#>
+							<div class="wcf-library-template" data-id="{{item.id}}" data-url="{{item.url}}">
+								<div class="thumbnail">
+									<img src="{{ item.thumbnail }}" alt="{{ item.title }}">
+								</div>
+								<# if(item?.valid && item.valid){ #>
+									<button class="library--action insert">
+										<i class="eicon-file-download"></i>
+										Insert
+									</button>
+								<#
+								} else {
+								#>
+								<?php if (! aaeaddon_pro_defined( 'VERSION' ) && ! array_key_exists($plugin_slug, $all_plugins)) { ?>
+									<a href="https://animation-addons.com" class="library--action pro" target="_blank">
+										<i class="eicon-external-link-square"></i>
+										<?php echo esc_html__('Go Premium', 'animation-addons-for-elementor'); ?>
+									</a>
+									<?php } elseif (aaeaddon_pro_defined( 'VERSION' ) && in_array($plugin_slug, $active_plugins) && get_option('aaeaddon_sc_error_status_current_support') !== 'active') { ?>
+										<a href="<?php echo esc_url($dahsboard_link); ?>" class="library--action pro" target="_blank">
+											<i class="eicon-external-link-square"></i>
+												<?php echo esc_html__('Activate License', 'animation-addons-for-elementor'); ?>
+											</a>                
+									<?php } elseif (array_key_exists($plugin_slug, $all_plugins)) { ?>
+										<button class="library--action pro aaeplugin-activate">
+											<i class="eicon-external-link-square"></i>
+											<?php echo esc_html__('Activate', 'animation-addons-for-elementor'); ?>
+									</button>
+									<?php } ?>
+								<# } #>
+								<p class="title">{{ item.title }}</p>
+							</div>
+							<#
+							} );
+							#>
+						</div>
+						<div class="aaeaadon-loadmore-footer">.</div>
+					</div>
+				</div>
+				<div class="dialog-loading dialog-lightbox-loading wcf-template-library--loading" hidden>
+					<div id="elementor-template-library-loading">
+						<div class="elementor-loader-wrapper">
+							<div class="elementor-loader">
+								<div class="elementor-loader-boxes">
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+								</div>
+							</div>
+							<div class="elementor-loading-title"><?php echo esc_html__('Loading', 'animation-addons-for-elementor'); ?></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tmpl-wcf-templates-single">
+			<div class="dialog-header dialog-lightbox-header">
+				<div class="elementor-templates-modal__header">
+					<div id="wcf-template-library-header-preview-back">
+							<i class="eicon-" aria-hidden="true"></i>
+							<span><?php echo esc_html__('Back to Library', 'animation-addons-for-elementor'); ?></span>
+						</div>
+					<div class="elementor-templates-modal__header__menu-area"></div>
+					<div class="elementor-templates-modal__header__items-area">
+						<div class="elementor-templates-modal__header__close elementor-templates-modal__header__close--normal elementor-templates-modal__header__item">
+
+							<i class="eicon-close" aria-hidden="true"></i>
+							<span class="elementor-screen-only"><?php echo esc_html__('Close', 'animation-addons-for-elementor'); ?></span>
+						</div>
+						<div id="elementor-template-library-header-tools">
+							<div id="elementor-template-library-header-preview">
+								<div id="elementor-template-library-header-preview-insert-wrapper" class="elementor-templates-modal__header__item">
+									<# if( data.valid ){ #>
+										<button class="library--action insert" data-id="{{ data.template_id }}" data-jurl="{{ data.jurl }}" data-builder="{{ data.builder }}" <# if ( data.insert_disabled ) { #>disabled title="{{ data.insert_disabled }}"<# } #>>
+											<i class="eicon-file-download"></i>
+											<?php echo esc_html__('Insert', 'animation-addons-for-elementor'); ?>
+										</button>
+									<# } #>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="dialog-message dialog-lightbox-message">
+				<div class="dialog-content dialog-lightbox-content">
+					<div id="elementor-template-library-preview">
+						<iframe src="{{data.template_link}}"></iframe>
+					</div>
+				</div>
+				<div class="dialog-loading dialog-lightbox-loading wcf-template-library--loading" hidden>
+					<div id="elementor-template-library-loading">
+						<div class="elementor-loader-wrapper">
+							<div class="elementor-loader">
+								<div class="elementor-loader-boxes">
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+									<div class="elementor-loader-box"></div>
+								</div>
+							</div>
+							<div class="elementor-loading-title"><?php echo esc_html__('Loading', 'animation-addons-for-elementor'); ?></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+<?php
+	}
+	public function preview_styles()
+	{
+
+		wp_enqueue_style(
+			'wcf-template-library-preview',
+			plugins_url('/assets/css/preview.css', __FILE__),
+			array(),
+			AAEADDON_VERSION
+		);
+	}
+	public static function get_template_types()
+	{
+
+		$template_type = array(
+			'block' => array(
+				'label' => esc_html__('Block', 'animation-addons-for-elementor'),
+			),
+			'page'  => array(
+				'label' => esc_html__('Page', 'animation-addons-for-elementor'),
+			),
+		);
+
+		return $template_type;
+	}
+
+	/**
+	 * Get templates data.
+	 *
+	 * This function the templates data.
+	 *
+	 * @param bool $force_update Optional. Whether to force the data retrieval or * not. Default is false.
+	 *
+	 * @return array|false Templates data, or false.
+	 * @since 1.0
+	 * @access private
+	 * @static
+	 */
+	private static function get_templates_data($force_update = false)
+	{
+
+		$cache_key      = 'aaeaddon_templates_data_' . 3.1;
+		$templates_data = get_transient($cache_key);
+
+		if ($force_update || false === $templates_data) {
+
+			$timeout = ($force_update) ? 15 : 25;
+
+			$response = wp_safe_remote_get(
+				esc_url_raw(self::$instance->api_url),
+				array(
+					'timeout' => $timeout,
+					'body'    => array(
+						// Which API version is used.
+						'api_version' => 1.1,
+						// Which language to return.
+						'site_lang'   => get_bloginfo('language'),
+					),
+				)
+			);
+
+			if (is_wp_error($response) || 200 !== (int) wp_remote_retrieve_response_code($response)) {
+				set_transient($cache_key, array(), 1 * HOUR_IN_SECONDS);
+				return false;
+			}
+
+			$templates_data = json_decode(wp_remote_retrieve_body($response), true);
+
+			if (empty($templates_data) || ! is_array($templates_data)) {
+				set_transient($cache_key, array(), 1 * HOUR_IN_SECONDS);
+
+				return false;
+			}
+
+			if (isset($templates_data['library'])) {
+				update_option(self::LIBRARY_OPTION_KEY, $templates_data['library'], 'no');
+				unset($templates_data['library']);
+			}
+			set_transient($cache_key, $templates_data, 12 * HOUR_IN_SECONDS);
+		}
+
+		return $templates_data;
+	}
+
+	public static function admin_scripts($hook)
+	{
+		if ($hook === 'plugins.php') {
+			wp_enqueue_script(
+				'aae-admin-scripts',
+				AAEADDON_URL . 'assets/js/wcf-admin.js',
+				array(),
+				AAEADDON_VERSION,
+				true
+			);
+
+		}
+	}
+
+	/**
+	 * Get Widget Skins List.
+	 *
+	 * @return array
+	 */
+	public static function get_widget_skins()
+	{
+
+		return apply_filters(
+			'wcf_widget_skins', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
+			array(
+				'advance-pricing-table' => array( // widget file/dir name.
+					'label'       => __('Advanced Pricing Table', 'animation-addons-for-elementor'),
+					'widget_name' => 'wcf--a-pricing-table',
+					'is_active'   => true,
+					'skins'       => array( // skin file names.
+						'skin-pricing-table-base' => array(
+							'is_active'    => true,
+							'is_base_skin' => true,
+						),
+						'skin-pricing-table-1'    => array('is_active' => true),
+						'skin-pricing-table-2'    => array('is_active' => true),
+					),
+				),
+
+			)
+		);
+	}
+
+	/**
+	 * Include Widgets skins
+	 *
+	 * Load widgets skins
+	 *
+	 * @since 0.0.1
+	 * @access private
+	 */
+	private function include_skins_files()
+	{
+		// The pro plugin ships the same widgets with the same skin ids; two
+		// skin sources on one element name duplicate every skin control
+		// ("Cannot redeclare control with same name").
+		// Pro 4.3 lives in `Wealcoder\AnimationAddonsPro\`; an older Pro in
+		// `WCFAddonsPro\`. Either one answers the same static call.
+		$pro_plugin = class_exists( '\Wealcoder\AnimationAddonsPro\Plugin' )
+			? '\Wealcoder\AnimationAddonsPro\Plugin'
+			: ( class_exists( '\WCFAddonsPro\Plugin' ) ? '\WCFAddonsPro\Plugin' : '' );
+		$pro_skins  = $pro_plugin ? $pro_plugin::get_widget_skins() : array();
+
+		foreach (self::get_widget_skins() as $slug => $data) {
+
+			// is widget all skins are not active
+			if (! $data['is_active']) {
+				continue;
+			}
+
+			// Pro provides this widget's skins.
+			if (isset($pro_skins[$slug])) {
+				continue;
+			}
+
+			foreach ($data['skins'] as $skin_slug => $skin) {
+				if (! $skin['is_active']) {
+					continue;
+				}
+
+				require_once AAEADDON_WIDGETS_PATH . $slug . '/skins/' . $skin_slug . '.php';
+
+				$class = explode('-', $skin_slug);
+				$class = array_map('ucfirst', $class);
+				$class = implode('_', $class);
+				$class = 'Wealcoder\\AnimationAddons\\Widgets\\Skin\\' . $class;
+
+				// has base base skin dont need register
+				if (isset($skin['is_base_skin'])) {
+					continue;
+				}
+
+				add_action(
+					'elementor/widget/' . $data['widget_name'] . '/skins_init',
+					function ($widget) use ($class) {
+						// skins_init fires on every constructed type instance;
+						// attach the skin (and its control hooks) only once.
+						static $added = false;
+
+						if ($added) {
+							return;
+						}
+						$added = true;
+
+						$widget->add_skin(new $class($widget));
+					}
+				);
+			}
+		}
+	}
+
+	/**
+	 * Initialize the elementor plugin
+	 *
+	 * Validates that Elementor is already loaded.
+	 * Checks for basic plugin requirements, if one check fail don't continue,
+	 *
+	 * Fired by `plugins_loaded` action hook.
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 */
+	public function elementor_init()
+	{
+
+		$this->include_skins_files();
+	}
+
+
+
+	/**
+	 * Editor style
+	 *
+	 * Enqueue plugin css integrations for Elementor editor.
+	 *
+	 * @since 1.2.1
+	 * @access public
+	 */
+	/**
+	 * Whether any legacy (v3) WIDGET is still switched on.
+	 *
+	 * This gates the free v3 core `wcf--addons` (JS + CSS) — the v3 WIDGET base
+	 * layer (the widget stylesheet + the WCF_ADDONS_JS data). Only v3 widgets
+	 * need it, so the EXTENSION option is deliberately NOT checked:
+	 *   - v3 extensions add control sections to widgets; they render no widget of
+	 *     their own and do not need the widget base CSS.
+	 *   - anything that DOES need `wcf--addons` at runtime (a v3 extension bundle,
+	 *     or Pro's chrome bundle `wcf--addons-ex`) declares it as a script
+	 *     DEPENDENCY, so it is still pulled wherever it is actually used —
+	 *     independent of this standalone gate.
+	 *
+	 * The option holds a key => bool array while anything is enabled and an empty
+	 * string once the dashboard has switched everything off — hence the
+	 * is_array() guard before array_filter().
+	 *
+	 * @since 1.2.1
+	 * @access public
+	 * @static
+	 *
+	 * @return bool True when at least one legacy widget is active.
+	 */
+	public static function has_active_legacy_assets()
+	{
+		$value = get_option('aaeaddon_save_widgets');
+		
+		return is_array($value) && (bool) array_filter($value);
+	}
+
+	public function register_starter_animation_style()
+	{
+
+		// Register only — never enqueue here. The Starter Animations control
+		// declares this handle in its `assets => styles` block with a condition
+		// on wcf_starter_animations, so Elementor enqueues it only on pages
+		// holding an element that actually uses an animation. Enqueuing it
+		// unconditionally shipped the file on every page of the site.
+		wp_register_style(
+			'aae-starter-animations',
+			AAEADDON_URL . 'assets/css/starter-animations.css',
+			[],
+			AAEADDON_VERSION
+		);
+	}
+
+	public function register_starter_animation_script()
+	{
+
+		// See register_starter_animation_style() — register only, enqueued
+		// per-element through the control's `assets => scripts` condition.
+		wp_register_script(
+			'aae-starter-animations',
+			AAEADDON_URL . 'assets/js/starter-animations.js',
+			[],
+			AAEADDON_VERSION,
+			true
+		);
+	}
+
+
+
+
+	/**
+	 *  Plugin class constructor
+	 *
+	 * Register plugin action hooks and filters
+	 *
+	 * @since 1.2.0
+	 * @access public
+	 */
+	public function __construct()
+	{
+		$this->api_url = self::block_library_host() . '/wp-json/api/v2/list';
+
+		add_action('elementor/elements/categories_registered', array($this, 'widget_categories'));
+
+		// Register widget scripts
+		add_action('wp_enqueue_scripts', array($this, 'widget_scripts'), 29);
+		// admin footer
+
+		// Register widget style
+		add_action('wp_enqueue_scripts', array($this, 'widget_styles'));
+
+		// Register widgets
+		add_action('elementor/widgets/register', array($this, 'register_widgets'));
+
+		// Register editor scripts
+		add_action('elementor/editor/after_enqueue_scripts', array($this, 'editor_scripts'));
+
+		// Register editor style
+		add_action('elementor/editor/after_enqueue_styles', array($this, 'editor_styles'));
+		add_filter('elementor/document/urls/preview', array($this, 'elementor_editor_url'), 4);
+		add_filter('elementor/document/urls/wp_preview', array($this, 'elementor_editor_url'), 4);
+		// add_action('wp_head', array($this, 'wp_head'), 4);
+
+		/* ===============================
+			Starter Animations Assets
+		=============================== */
+
+		// Register assets
+		add_action('elementor/frontend/after_register_styles', [$this, 'register_starter_animation_style']);
+		add_action('elementor/frontend/after_register_scripts', [$this, 'register_starter_animation_script']);
+
+		add_action(
+			'elementor/editor/after_enqueue_scripts',
+			function () {
+				if (!self::has_active_legacy_assets()) {
+					return;
+				}
+
+				wp_enqueue_script('aae-starter-animations');
+			}
+		);
+
+		add_action(
+			'elementor/editor/after_enqueue_styles',
+			function () {
+				if (!self::has_active_legacy_assets()) {
+					return;
+				}
+
+				wp_enqueue_style('aae-starter-animations');
+			}
+		);
+
+		// Editor PREVIEW iframe: enqueue for the whole document rather than
+		// per-element. The `assets` condition declared on the wcf_starter_animations
+		// control cannot work here — Elementor's asset iteration bails out in
+		// preview mode (Assets::is_action_needed() -> is_preview_mode()), and the
+		// builder has to see the animation the moment they pick one, before any
+		// save. The frontend stays strictly per-element. Still gated on the legacy
+		// feature being active, so a site with everything switched off loads
+		// nothing here either.
+		add_action(
+			'elementor/preview/enqueue_scripts',
+			function () {
+				if (!self::has_active_legacy_assets()) {
+					return;
+				}
+
+				wp_enqueue_script('aae-starter-animations');
+			}
+		);
+
+		add_action(
+			'elementor/preview/enqueue_styles',
+			function () {
+				if (!self::has_active_legacy_assets()) {
+					return;
+				}
+
+				wp_enqueue_style('aae-starter-animations');
+			}
+		);
+
+
+
+		$this->include_files();
+
+		add_action('elementor/init', array($this, 'elementor_init'), 0);
+
+		if (class_exists('\Wealcoder\AnimationAddons\Library_Source')) {
+
+			add_action('elementor/editor/footer', array($this, 'print_templates'));
+			// enqueue modal's preview css.
+			add_action('elementor/preview/enqueue_styles', array($this, 'preview_styles'));
+		}
+
+		// WPML Support 
+		add_filter('wpml_elementor_widgets_to_translate', [WPML\WPML_Manager::class, 'add_widgets_to_translate']);
+		// A translation WPML just wrote must not render from Elementor's cache of the previous one.
+		add_action('wpml_pb_finished_adding_string_translations', [WPML\WPML_Manager::class, 'invalidate_render_cache'], 20, 1);
+	}
+}
+
+// Instantiate Plugin Class
+Plugin::instance();

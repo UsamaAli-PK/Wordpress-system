@@ -1,0 +1,113 @@
+<?php
+
+namespace Arts\SmoothScrolling;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Reads the kit-bound Site Settings controls and emits exactly the
+ * `TOptions` shape boot.ts consumes. The `anchors` block is derived here by
+ * hand, and again in mapKitSettings() for the editor's live-preview path (TS
+ * side) — nothing enforces that parity, so a rule changed here has to be
+ * changed there too.
+ *
+ * Every control is JS-bound — there is no appearance surface, so nothing
+ * here mirrors kit CSS variables. Without Elementor (or before a kit
+ * exists) every key resolves to its control default.
+ */
+class Options {
+
+	private const EASINGS                  = array( 'expo.out', 'linear' );
+	private const DEFAULT_DURATION         = 1.2;
+	private const DEFAULT_EASING           = 'expo.out';
+	private const DISABLE_TOUCH_DEFAULT    = '(hover: hover) and (pointer: fine)';
+	private const REDUCED_MOTION_CONDITION = '(prefers-reduced-motion: no-preference)';
+
+	/** @return array<string, mixed> */
+	public static function build(): array {
+		$duration = self::size_of( 'arts_smooth_scrolling_duration', self::DEFAULT_DURATION );
+		$easing   = self::easing_of( 'arts_smooth_scrolling_easing', self::DEFAULT_EASING );
+		// A filter shared across Arts plugins and themes, so one callback forces full motion everywhere.
+		$reduced_motion = (bool) apply_filters( 'arts/reduced_motion/enabled', true );
+
+		$options = array(
+			'matchMedia'     => self::match_media( $reduced_motion ),
+			'reducedMotion'  => $reduced_motion,
+			// No control for this one — always on, filterable below like every other key.
+			'prefersGSAPRaf' => true,
+			'lenisOptions'   => array(
+				'duration' => $duration,
+				'easing'   => $easing,
+				'anchors'  => array(
+					'offset'    => 0,
+					'immediate' => false,
+					'lock'      => false,
+					'force'     => true,
+					'easing'    => self::DEFAULT_EASING === $easing ? 'expo.inOut' : $easing,
+					'duration'  => round( $duration * 0.8, 4 ),
+				),
+			),
+		);
+
+		/**
+		 * Filters the smooth scrolling options payload before it is printed inline.
+		 *
+		 * @param array<string, mixed> $options
+		 */
+		return apply_filters( 'arts_smooth_scrolling/options', $options );
+	}
+
+	/**
+	 * Raw disable_touch control value: the media query string, or '' once switched off.
+	 * While reduced motion is honoured, every branch of the query also requires the
+	 * visitor's system to ask for full motion, so the gate never loads the engine for
+	 * a reduced-motion visitor and the controller follows the setting live.
+	 */
+	private static function match_media( bool $reduced_motion ): string {
+		$value = self::kit_value( 'arts_smooth_scrolling_disable_touch' );
+		if ( null === $value ) {
+			$query = self::DISABLE_TOUCH_DEFAULT;
+		} else {
+			$query = is_string( $value ) ? $value : '';
+		}
+		if ( ! $reduced_motion ) {
+			return $query;
+		}
+		if ( '' === trim( $query ) ) {
+			return self::REDUCED_MOTION_CONDITION;
+		}
+		return implode(
+			', ',
+			array_map(
+				static fn( string $branch ): string => trim( $branch ) . ' and ' . self::REDUCED_MOTION_CONDITION,
+				explode( ',', $query )
+			)
+		);
+	}
+
+	private static function easing_of( string $key, string $default ): string {
+		$value = self::kit_value( $key );
+		return in_array( $value, self::EASINGS, true ) ? $value : $default;
+	}
+
+	/** Raw kit value for a key, or null when Elementor/kit/value is absent. */
+	private static function kit_value( string $key ): mixed {
+		if ( ! class_exists( '\Elementor\Plugin' ) || ! \Elementor\Plugin::$instance || ! \Elementor\Plugin::$instance->kits_manager ) {
+			return null;
+		}
+		return \Elementor\Plugin::$instance->kits_manager->get_current_settings( $key );
+	}
+
+	private static function size_of( string $key, float $default ): float {
+		$value = self::kit_value( $key );
+		if ( is_array( $value ) && isset( $value['size'] ) && is_numeric( $value['size'] ) ) {
+			return (float) $value['size'];
+		}
+		if ( is_numeric( $value ) ) {
+			return (float) $value;
+		}
+		return $default;
+	}
+}

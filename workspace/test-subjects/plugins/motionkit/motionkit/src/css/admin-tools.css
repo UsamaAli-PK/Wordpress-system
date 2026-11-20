@@ -1,0 +1,108 @@
+/**
+ * MotionKit — Admin Tools tab styles.
+ * Loaded only on the Tools tab of the MotionKit admin page.
+ */
+
+/* .motionkit-btn--sm, the .motionkit-modal shell and the .motionkit-details-* popup are in admin.css, shared with the Animations tab. */
+
+/* Solid danger button — wins over motionkit-btn--primary's blue background. */
+.motionkit-btn.motionkit-btn--primary.motionkit-btn--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+.motionkit-btn.motionkit-btn--primary.motionkit-btn--danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+/* ─── Animation Pages card header ─── */
+/* The title and the search box wrap on a narrow card instead of the title breaking into two lines beside the box. */
+.motionkit-tools-card-header {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.motionkit-tools-card-header .motionkit-card-header-left {
+  flex: 1 1 auto;
+}
+
+/* Same 36px control as the Animations tab's toolbar; scoped under the header because wp-admin's own input[type="search"] rule sets a 40px min-height and its own padding. */
+.motionkit-tools-card-header .motionkit-tools-search {
+  box-sizing: border-box;
+  flex: 0 1 300px;
+  width: auto;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  line-height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+}
+
+.motionkit-tools-card-header .motionkit-tools-search:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* ─── Table ─── */
+/* Three columns (title, type, actions) fit the card, so the row never scrolls sideways; the modified time and the storage live in the popup. The list grows with the page, loading as it is scrolled (admin.css, .motionkit-table-scroll). */
+.motionkit-tools-table { width: 100%; border-collapse: collapse; }
+.motionkit-tools-table th,
+.motionkit-tools-table td { padding: 10px 16px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: left; vertical-align: middle; }
+.motionkit-tools-table th { font-weight: 600; background: #f9fafb; color: #374151; }
+.motionkit-tools-table tbody tr:hover { background: #f9fafb; }
+.motionkit-tools-table tbody tr:last-child td { border-bottom: none; }
+
+/* A long title or key wraps inside its cell instead of widening the table. */
+.motionkit-tools-col-title { overflow-wrap: anywhere; }
+.motionkit-tools-col-type,
+.motionkit-tools-col-actions { width: 1%; white-space: nowrap; }
+.motionkit-tools-col-actions { text-align: right; }
+
+.motionkit-tools-row-key {
+  display: block;
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.motionkit-tools-empty { text-align: center; color: #6b7280; padding: 32px 12px; }
+
+/* Tighter cells on a narrow screen, so the title keeps most of the row beside the two fixed columns. */
+@media screen and (max-width: 782px) {
+  .motionkit-tools-table th,
+  .motionkit-tools-table td { padding: 10px 8px; }
+  .motionkit-tools-table th:first-child,
+  .motionkit-tools-table td:first-child { padding-left: 12px; }
+  .motionkit-tools-table th:last-child,
+  .motionkit-tools-table td:last-child { padding-right: 12px; }
+}
+
+.motionkit-tools-type {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.motionkit-modal-progress { margin: 16px 0; }
+.motionkit-progress-bar { height: 10px; background: #e5e7eb; border-radius: 5px; overflow: hidden; }
+.motionkit-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  width: 0%;
+  transition: width 0.25s ease;
+}
+.motionkit-progress-label { margin-top: 8px; font-size: 12px; color: #6b7280; text-align: center; }

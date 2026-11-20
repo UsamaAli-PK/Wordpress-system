@@ -1,0 +1,3224 @@
+<?php
+/**
+ * Adds menu and assets.
+ *
+ * @package    responsive-addons-for-elementor
+ * @subpackage responsive-addons-for-elementor/includes
+ * @author     CyberChimps <support@cyberchimps.com>
+ */
+
+use Elementor\Utils;
+use Elementor\Plugin;
+use Elementor\Icons_Manager;
+use Responsive_Addons_For_Elementor\Helper\Helper;
+use Responsive_Addons_For_Elementor\Traits\Woo_Checkout_Helper;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Class Responsive_Addons_For_Elementor
+ *
+ * @package Responsive_Addons_For_Elementor
+ */
+class Responsive_Addons_For_Elementor {
+
+
+	const MINIMUM_ELEMENTOR_VERSION = '3.10.0';
+
+	/**
+	 * False if no posts are found for migration.
+	 *
+	 * @var $is_migrated
+	 */
+	public static $is_migrated = true;
+
+	/**
+	 * Represents the singleton instance.
+	 *
+	 * @var null|self
+	 */
+	private static $instance = null;
+
+	/**
+	 * Retrieves the singleton instance of the class.
+	 *
+	 * @return self The singleton instance.
+	 */
+	public static function instance() {
+
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+
+		add_action( 'init', array( $this, 'responsive_addons_for_elementor_widgets_display' ) );
+		add_action( 'plugins_loaded', array( $this, 'init' ) );
+
+		add_action( 'elementor/frontend/before_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
+		add_action( 'elementor/frontend/after_enqueue_styles', array( $this, 'enqueue_styles' ) );
+		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
+		add_action( 'elementor/frontend/after_register_scripts', array( $this, 'widget_scripts' ) );
+  		
+		// Elementor editor scripts for import template notice
+        add_action( 'elementor/editor/after_enqueue_scripts', [ $this, 'rael_enqueue_editor_scripts' ] );
+
+		add_action( 'admin_enqueue_scripts', array( &$this, 'responsive_addons_for_elementor_admin_enqueue_styles' ) );
+
+		add_action( 'admin_enqueue_scripts', array( $this, 'rae_load_duplicator_scripts' ) );
+
+		// Responsive Addons for Elementor Menu.
+		add_action( 'admin_menu', array( $this, 'responsive_addons_for_elementor_admin_menu' ), 9 );
+		add_action( 'responsive_register_admin_menu', array( $this, 'rael_register_admin_menu' ) );
+
+		// Remove all admin notices from specific pages.
+		add_action( 'admin_init', array( $this, 'responsive_addons_for_elementor_admin_init' ) );
+
+		add_action( 'wp_enqueue_scripts', array( $this, 'load_assets' ), 15 );
+
+		// Enqueues the necessary scripts and styles for the plugin's admin interface
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+
+		// Redirect to Getting Started Page on Plugin Activation.
+		add_action( 'admin_init', array( $this, 'responsive_addons_for_elementor_maybe_redirect_to_getting_started' ) );
+
+		// RAEL Getting Started Widgets Toggle.
+		add_action( 'wp_ajax_rael_widgets_toggle', array( $this, 'rael_widgets_toggle' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'rael_enqueue_dashicons' ) );
+
+		add_action( 'admin_enqueue_scripts', array( $this, 'responsive_addons_for_elementor_responsive_menu' ) );
+
+		// MailChimp Subscribe.
+		add_action( 'wp_ajax_rael_mailchimp_subscribe', array( $this, 'mailchimp_subscribe_with_ajax' ) );
+		add_action( 'wp_ajax_nopriv_rael_mailchimp_subscribe', array( $this, 'mailchimp_subscribe_with_ajax' ) );
+
+		// Facebook Feed.
+		add_action( 'render_facebook_feed', array( $this, 'rael_render_facebook_feed' ), 10 );
+		add_action('wp_ajax_rael_facebook_feed_load_more', array($this, 'rael_facebook_feed_load_more'));
+		add_action('wp_ajax_nopriv_rael_facebook_feed_load_more', array($this, 'rael_facebook_feed_load_more'));
+
+		// Quick View.
+		add_action( 'wp_ajax_nopriv_rael_product_quickview_popup', array( Helper::class, 'rael_product_quickview_popup' ) );
+		add_action( 'wp_ajax_rael_product_quickview_popup', array( Helper::class, 'rael_product_quickview_popup' ) );
+
+		add_action( 'wp_ajax_nopriv_rael_product_add_to_cart', array( Helper::class, 'rael_product_add_to_cart' ));
+		add_action( 'wp_ajax_rael_product_add_to_cart', array( Helper::class, 'rael_product_add_to_cart' ));
+
+		// RAEL Products.
+		add_action( 'wp_ajax_rael_load_more', array( Helper::class, 'ajax_load_more' ) );
+		add_action( 'wp_ajax_nopriv_rael_load_more', array( Helper::class, 'ajax_load_more' ) );
+
+		// RAEL Products Compare.
+		add_action( 'wp_ajax_nopriv_rael_products_compare', array( Helper::class, 'ajax_get_compare_table' ) );
+		add_action( 'wp_ajax_rael_products_compare', array( Helper::class, 'ajax_get_compare_table' ) );
+
+		add_action( 'wp_ajax_rael_products_pagination_product', array( Helper::class, 'ajax_rael_products_pagination_product' ) );
+		add_action( 'wp_ajax_nopriv_rael_products_pagination_product', array( Helper::class, 'ajax_rael_products_pagination_product' ) );
+
+		add_action( 'wp_ajax_rael_woo_product_pagination', array( Helper::class, 'ajax_rael_woo_product_pagination' ) );
+		add_action( 'wp_ajax_nopriv_rael_woo_product_pagination', array( Helper::class, 'ajax_rael_woo_product_pagination' ) );
+
+		// RAEL Ajax Select2.
+		add_action( 'wp_ajax_rael_ajax_select2_search_post', array( Helper::class, 'rael_ajax_select2_posts_filter_autocomplete' ) );
+		add_action( 'wp_ajax_nopriv_rael_ajax_select2_search_post', array( Helper::class, 'rael_ajax_select2_posts_filter_autocomplete' ) );
+
+		add_action( 'wp_ajax_rael_ajax_select2_get_title', array( Helper::class, 'rael_ajax_select2_get_posts_value_titles' ) );
+		add_action( 'wp_ajax_nopriv_rael_ajax_select2_get_title', array( Helper::class, 'rael_ajax_select2_get_posts_value_titles' ) );
+
+		// RAEL Woo Checkout.
+		add_action( 'wp_ajax_woo_checkout_update_order_review', array( $this, 'woo_checkout_update_order_review' ) );
+		add_action( 'wp_ajax_nopriv_woo_checkout_update_order_review', array( $this, 'woo_checkout_update_order_review' ) );
+
+		add_action( 'admin_notices', array( $this, 'rael_migration_notice' ) );
+		add_action( 'wp_ajax_rael_rea_to_rae_migration', array( $this, 'rael_rea_to_rae_migration' ) );
+
+		//RAEL Facebook Feed
+		add_action('wp_ajax_rael_facebook_feed_load_more', array($this, 'rael_facebook_feed_load_more'));
+		add_action('wp_ajax_nopriv_rael_facebook_feed_load_more', array($this, 'rael_facebook_feed_load_more'));
+
+		// Hook into save_post to scan Elementor content for RAE widgets for review notice purpose
+		add_action( 'save_post', array( $this, 'rael_check_widgets_in_post' ), 20, 2 );
+		add_action( 'wp_ajax_rael_mark_template_imported', array( $this, 'rael_mark_template_imported' ) );
+		add_action( 'wp_ajax_nopriv_rael_mark_template_imported', array( $this, 'rael_mark_template_imported' ) );
+
+
+		add_action( 'wp_ajax_rael_save_duplicator_settings', array( $this, 'rael_save_duplicator_settings' ) );
+
+		// RST icon in editor
+		//add_action( 'elementor/editor/after_enqueue_styles', array( $this, 'rael_editor_promo_styles' ) );
+		add_action( 'elementor/editor/after_enqueue_styles', function () {
+			wp_enqueue_style(
+				'rael-inter-font',
+				'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap',
+				[],
+				null
+			);
+		}
+
+	);
+
+		$is_rst_active = is_plugin_active( 'responsive-add-ons/responsive-add-ons.php' );
+
+
+		add_action( 'elementor/editor/after_enqueue_scripts', function () use ( $is_rst_active ) {
+			wp_enqueue_script(
+				'rael-editor-add-rst-promo-block',
+				RAEL_URL . 'assets/dist/js/editor/rael-editor-add-rst-promo-block.min.js',
+				array( 'jquery', 'elementor-editor' ),
+				RAEL_VER,
+				true
+			);
+			wp_localize_script(
+				'rael-editor-add-rst-promo-block',
+				'raelEditorAddRstPromoBlock',
+				array(
+					'rstPromoIconUrl' => RAEL_URL . 'admin/images/rst-editor-icon.svg',
+					'nonce'           => wp_create_nonce( 'rael_rst_nonce' ),
+        			'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+					'isRstActive'	  => $is_rst_active ? $is_rst_active : 0,
+				)
+			);
+
+		});
+
+
+		add_action( 'elementor/editor/footer', array( $this, 'rae_print_rst_template_views' ) );
+
+		
+
+		add_action( 'wp_ajax_rae_install_rplus_plugin',array( $this, 'rae_install_rplus_plugin' ));
+
+		
+
+		global $blog_id;
+		if ( is_multisite() ) {
+			switch_to_blog( $blog_id );
+			$rael_migration_status = get_option( 'rea_to_rae_migration_process' );
+			restore_current_blog();
+		} else {
+			$rael_migration_status = get_option( 'rea_to_rae_migration_process' );
+		}
+
+		if ( 'complete' === $rael_migration_status ) {
+			add_filter( 'plugin_action_links', array( $this, 'rael_disable_responsive_elementor_addons_activation' ), 10, 2 );
+		}
+
+		add_action( 'admin_footer', array( $this, 'rael_migration_consent_popup' ) );
+
+		add_action( 'admin_notices', array( $this, 'rael_ask_for_review_notice' ) );
+		add_action( 'admin_init', array( $this, 'rael_notice_dismissed' ) );
+		add_action( 'admin_init', array( $this, 'rael_notice_change_timeout' ) );
+
+		add_action( 'upgrader_process_complete', array( $this, 'rael_wp_upe_upgrade_completed' ), 10, 2 );
+
+		// Add rated links to plugin's description in plugins table
+		add_filter( 'plugin_row_meta', array( $this, 'rael_rate_plugin_link' ), 10, 2 );
+
+		$this->load_dependencies();
+		$this->define_admin_hooks();
+	}
+
+	/**
+	 * Get REA Version.
+	 *
+	 * @since 1.4
+	 */
+	public static function rael_get_rea_version() {
+
+		$plugin_slug = 'responsive-elementor-addons';
+		$plugin_file = $plugin_slug . '/' . $plugin_slug . '.php';
+
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$installed_plugins = get_plugins();
+
+		if ( isset( $installed_plugins[ $plugin_file ] ) ) {
+			$installed_rea_version = $installed_plugins[ $plugin_file ]['Version'];
+			return $installed_rea_version;
+		}
+	}
+
+	/**
+	 * REA to RAE Migration Notice.
+	 * Use real-migration-notice.css to style the notice.
+	 *
+	 * @since 1.4
+	 */
+	public function rael_migration_notice() {
+		$plugin_slug = 'responsive-elementor-addons';
+		if ( self::rael_is_rae_plugin_installed( $plugin_slug ) ) {
+			$rea_version = self::rael_get_rea_version();
+			if ( version_compare( $rea_version, '2.0.5', '<' ) ) {
+				global $blog_id;
+				if ( is_multisite() ) {
+					switch_to_blog( $blog_id );
+				}
+				$migration_status                          = get_option( 'rea_to_rae_migration_process' );
+				$is_old_responsive_elementor_addons_active = get_option( 'is_old_responsive_elementor_addons_active' );
+				if ( is_multisite() ) {
+					restore_current_blog();
+				}
+				if ( $is_old_responsive_elementor_addons_active ) {
+					if ( ! $migration_status || 'processing' === $migration_status ) {
+						?>
+					<div class="notice notice-info rael-migration-notice rael-migration-pending">
+						<p><?php esc_html_e( 'Responsive Elementor Addons(old) plugin is being deprecated and relaunched as Responsive Addons for Elementor(new) to meet the Elementor\'s copyright guidelines. We need to migrate your database to the new plugin to keep things running smoothly. This process runs in the background and may take a while, so we request that you do not reload the website, as it will interrupt the migration process.', 'responsive-addons-for-elementor' ); ?></p>
+						<div class="rael-notice-button-group">
+							<button id="rael_migration_notice_button" class="button button-primary"><?php esc_html_e( 'Migrate', 'responsive-addons-for-elementor' ); ?></button>
+						</div>
+					</div>
+						<?php
+					}
+					$display_class = 'rael-migration-notice-hide';
+					if ( 'yes' === get_site_transient( 'rea_to_rae_migration_complete' ) ) {
+						$display_class = 'rael-migration-notice-show';
+					}
+					?>
+					<div class="notice notice-success rael-migration-notice rael-migration-complete <?php echo esc_attr( $display_class ); ?>">
+						<p><strong><?php esc_html_e( 'Responsive Addons for Elementor Migration Update', 'responsive-addons-for-elementor' ); ?></strong><?php esc_html_e( ' - The database migration process from Responsive Elementor Addons(old) to Responsive Addons for Elementor(new) is complete. Thank you for migrating to the latest plugin! Please refresh the window.', 'responsive-addons-for-elementor' ); ?></p>
+					</div>
+					<div class="notice notice-success rael-migration-notice rael-activated <?php echo esc_attr( $display_class ); ?>">
+						<div class="rael-rael-activated-container">
+							<div class="rael-rael-activated-notice-logo-container">
+								<img class="rael-rael-activated-notice-logo" src="<?php echo esc_url( RAEL_URL ) . 'admin/images/rae-icon.svg'; ?>" alt="rae-logo">
+							</div>
+							<div class="rael-rael-activated-notice-content">
+								<p class="rael-rael-activated-notice-title"><?php esc_html_e( 'The latest version for Responsive Addons for Elementor(new) plugin is installed successfully!', 'responsive-addons-for-elementor' ); ?></p>
+								<p class="rael-rael-activated-notice-desc"><?php esc_html_e( 'Encountering issues after migrating to the new plugin? We have collected the fixes for troubleshooting common issues. ', 'responsive-addons-for-elementor' ); ?> <u><a target="_blank" href="<?php echo esc_url( 'https://cyberchimps.com/open-a-ticket/' ); ?>"><?php esc_html_e( 'Open a ticket', 'responsive-addons-for-elementor' ); ?></a></u></p>
+							</div>
+						</div>
+					</div>
+					<?php
+				}
+			}
+			if ( version_compare( $rea_version, '2.0.5', '>=' ) || ! $is_old_responsive_elementor_addons_active ) {
+				add_filter( 'plugin_action_links', array( $this, 'rael_disable_responsive_elementor_addons_activation' ), 10, 2 );
+				?>
+				<div class="notice notice-info rael-migration-notice rael-no-migration-notice">
+					<p><?php esc_html_e( 'Responsive Elementor Addons(old) plugin is being deprecated and relaunched as Responsive Addons for Elementor(new) to meet the Elementor\'s copyright guidelines. It is not recommended to install the old plugin as your site will face critical issues and there won\'t be any new releases for the old plugin.', 'responsive-addons-for-elementor' ); ?></p>
+				</div>
+				<?php
+			}
+		}
+	}
+
+	/**
+	 * REA to RAE Migration.
+	 * Use rea-migration-notice.js to style the notice.
+	 *
+	 * @since 1.4
+	 */
+	public function rael_rea_to_rae_migration() {
+		check_ajax_referer( 'rael-rea-to-rae-migration', '_nonce' );
+		self::responsive_addons_for_elementor_install_rae();
+	}
+	
+	/**
+	 * Facebook Feed Load More AJAX handler
+	 * This function handles the AJAX request to load more Facebook feed posts.
+	 * 
+	 * @since 1.7.4
+	 */
+	function rael_facebook_feed_load_more() {		
+		if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'rael_facebook_feed_nonce')) {
+			wp_send_json_error(__('Nonce verification failed', 'responsive-addons-for-elementor'));
+		}
+		
+		$widget_id = isset($_POST['widget_id']) ? sanitize_text_field($_POST['widget_id']) : '';
+		$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+		$offset = isset($_POST['offset']) ? intval($_POST['offset']) : null;
+		$limit  = isset($_POST['limit'])  ? intval($_POST['limit'])  : null;
+		if (empty($widget_id)) {
+			wp_send_json_error(__('Invalid widget ID', 'responsive-addons-for-elementor'));
+		}
+		
+		$document = \Elementor\Plugin::$instance->documents->get($post_id);
+		$settings = [];
+		
+		if ($document) {
+			$elements = $document->get_elements_data();
+			$widget_data = $this->rael_find_element_recursive($elements, $widget_id);
+			
+			if ($widget_data) {
+				$widget = \Elementor\Plugin::$instance->elements_manager->create_element_instance($widget_data);
+				$settings = $widget->get_settings_for_display();
+				
+				// Modify settings for pagination
+				if ($offset === null) {
+					$page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+					$size = isset($settings['rael_facebook_feed_image_count']['size']) ? intval($settings['rael_facebook_feed_image_count']['size']) : 0;
+					$offset = $size * ($page - 1);
+				}
+				if ($limit !== null) {
+					$settings['rael_facebook_feed_image_count']['size'] = $limit;
+				}
+				
+				$settings['rael_facebook_feed_offset'] = $offset;
+
+				ob_start();
+				$this->rael_render_facebook_feed($settings);
+				$html = ob_get_clean();
+				
+				$key = 'rael_facebook_feed_' . hash('sha256', str_replace('.', '', $settings['rael_facebook_feed_page_id'] . $settings['rael_facebook_feed_access_token'])) . $settings['rael_facebook_feed_cache_limit'];
+				$facebook_data = get_transient($key);
+				$total_posts = isset($facebook_data['data']) ? count($facebook_data['data']) : 0;
+				$has_more = ($offset + $settings['rael_facebook_feed_image_count']['size']) < $total_posts;
+				
+				wp_send_json_success([
+					'html' => $html,
+					'has_more' => $has_more
+				]);
+			}
+		}
+		
+		wp_send_json_error(__('Unable to load widget settings', 'responsive-addons-for-elementor'));
+	}
+
+private function rael_find_element_recursive($elements, $widget_id) {
+    foreach ($elements as $element) {
+        if ($widget_id === $element['id']) {
+            return $element;
+        }
+        
+        if (!empty($element['elements'])) {
+            $found = $this->rael_find_element_recursive($element['elements'], $widget_id);
+            if ($found) {
+                return $found;
+            }
+        }
+    }
+    return false;
+}
+
+	/**
+	 * Install and Activates the RAE plugin.
+	 *
+	 * @since    1.4
+	 */
+	public static function responsive_addons_for_elementor_install_rae() {
+
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			$response = array(
+				'message'       => 'You do not have capabilities to install plugins',
+				'response_type' => 'error',
+			);
+			wp_send_json_error( $response, 403 );
+		}
+
+		global $blog_id;
+		if ( is_multisite() ) {
+			switch_to_blog( $blog_id );
+			update_option( 'rea_to_rae_migration_process', 'processing' );
+			restore_current_blog();
+		} else {
+			update_option( 'rea_to_rae_migration_process', 'processing' );
+		}
+
+		self::responsive_addons_for_elementor_backup_db();
+
+		self::responsive_addons_for_elementor_replace_options();
+
+		self::responsive_addons_for_elementor_deactivate_plugin();
+	}
+
+	/**
+	 * Display Admin Notices.
+	 *
+	 * @since 1.4
+	 */
+	public static function responsive_addons_for_elementor_backup_db() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			$response = array(
+				'message'       => 'You do not have capabilities to manage options',
+				'response_type' => 'error',
+			);
+			wp_send_json_error( $response, 403 );
+		}
+
+		global $wpdb;
+
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT post_table.ID, postmeta_table.meta_id, post_table.post_type
+				FROM {$wpdb->posts} AS post_table
+				LEFT JOIN {$wpdb->postmeta} AS postmeta_table ON post_table.ID = postmeta_table.post_id
+				WHERE post_table.post_status IN ('publish', 'draft')
+				AND postmeta_table.meta_key = '_elementor_data'
+				AND (postmeta_table.meta_value LIKE %s OR postmeta_table.meta_value LIKE %s)",
+				'%rea_%',
+				'%rea-%'
+			),
+			ARRAY_N
+		);
+
+		if ( empty( $results ) ) {
+			self::$is_migrated = false;
+			self::responsive_addons_for_elementor_deactivate_plugin();
+		}
+
+		$post_ids          = array();
+		$meta_ids          = array();
+		$theme_builder_ids = array();
+
+		if ( $results ) {
+			foreach ( $results as $result ) {
+				$post_ids[] = $result[0];
+				$meta_ids[] = $result[1];
+				if ( 'rea-theme-template' === $result[2] ) {
+					$theme_builder_ids[] = $result[0];
+				}
+			}
+		}
+
+		// Replace the Theme Builder Post Type.
+		foreach ( $theme_builder_ids as $theme_builder_id ) {
+			wp_update_post(
+				array(
+					'ID'        => $theme_builder_id,
+					'post_type' => 'rael-theme-template',
+				),
+			);
+
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}postmeta
+					SET meta_key = CASE
+						WHEN meta_key = 'rea_hf_include_locations' THEN 'rael_hf_include_locations'
+						WHEN meta_key = 'rea_hf_exclude_locations' THEN 'rael_hf_exclude_locations'
+						WHEN meta_key = 'rea_hf_target_user_roles' THEN 'rael_hf_target_user_roles'
+						WHEN meta_key = 'rea_hf_template_type' THEN 'rael_hf_template_type'
+						ELSE meta_key
+					END
+					WHERE post_id = %d AND meta_key IN ('rea_hf_include_locations', 'rea_hf_exclude_locations', 'rea_hf_target_user_roles', 'rea_hf_template_type')",
+					$theme_builder_id
+				)
+			);
+		}
+
+		$post_count = count( $post_ids );
+
+		for ( $i = 0; $i < $post_count; $i++ ) {
+
+			$meta_value = get_post_meta( $post_ids[ $i ], '_elementor_data' );
+
+			$data = maybe_unserialize( $meta_value );
+
+			if ( is_array( $data ) ) {
+
+				$updated_data = self::responsive_addons_for_elementor_replace_keys( $data );
+
+				$updated_meta_value = maybe_serialize( $updated_data[0] );
+
+				$wpdb->update(
+					$wpdb->postmeta,
+					array( 'meta_value' => $updated_meta_value ),
+					array( 'meta_id' => $meta_ids[ $i ] ),
+					array( '%s' ),
+					array( '%d' )
+				);
+			}
+		}
+		Plugin::$instance->files_manager->clear_cache();
+	}
+
+	/**
+	 * Replace the postmeta keys for elementor posts.
+	 *
+	 * @param array $array Array containing the keys which needs to be replaced.
+	 * @since     1.4
+	 */
+	public static function responsive_addons_for_elementor_replace_keys( $array ) {
+
+		$updated_array = array();
+
+		foreach ( $array as $key => $value ) {
+			$new_key = str_replace( array( 'rea_', 'rea-' ), array( 'rael_', 'rael-' ), $key );
+
+			if ( is_string( $value ) ) {
+				$value = str_replace( array( 'rea_', 'rea-' ), array( 'rael_', 'rael-' ), $value );
+				$value = str_replace( 'rael__image_hotspot', 'rael_image_hotspot', $value );
+			} elseif ( is_array( $value ) ) {
+				$value = self::responsive_addons_for_elementor_replace_keys( $value );
+			}
+
+			$updated_array[ $new_key ] = $value;
+		}
+
+		return $updated_array;
+	}
+
+	/**
+	 * Replace the postmeta keys for elementor posts.
+	 *
+	 * @since     1.4
+	 */
+	public static function responsive_addons_for_elementor_replace_options() {
+		global $wpdb;
+
+		$results = $wpdb->get_results(
+			"SELECT option_id, option_name
+			FROM $wpdb->options
+			WHERE (option_name LIKE 'rea_%' OR option_name LIKE 'rea-%')
+			AND option_name NOT IN ('reads_app_settings', 'rea_widgets', 'rea_to_rae_migration_process')"
+		);
+
+		$results_count = count( $results );
+
+		$option_ids   = array();
+		$option_names = array();
+
+		for ( $i = 0; $i < $results_count; $i++ ) {
+			$option_ids[]   = $results[ $i ]->option_id;
+			$option_names[] = $results[ $i ]->option_name;
+		}
+
+		$option_ids_count = count( $option_ids );
+
+		for ( $i = 0; $i < $option_ids_count; $i++ ) {
+
+			$updated_option_name = str_replace( array( 'rea_', 'rea-' ), array( 'rael_', 'rael-' ), $option_names[ $i ] );
+
+			$skip_keys = array( 'rael_enable_copy_paste_btn', 'rael_to_rae_migration_process' );
+
+			if ( in_array( $updated_option_name, $skip_keys, true ) ) {
+				continue;
+			}
+
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE $wpdb->options
+					SET option_name = %s
+					WHERE option_id = %d",
+					$updated_option_name,
+					$option_ids[ $i ]
+				)
+			);
+		}
+	}
+
+	/**
+	 * Check if RAE plugin is installed.
+	 *
+	 * @param (String) $plugin_slug Plugin Slug.
+	 * @since     1.4
+	 */
+	public static function rael_is_rae_plugin_installed( $plugin_slug ) {
+		if ( file_exists( ABSPATH . 'wp-content/plugins/' . $plugin_slug ) ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Install RAE plugin.
+	 *
+	 * @param (String) $plugin_slug Plugin zip.
+	 * @since     1.4
+	 */
+	public static function rael_install_plugin( $plugin_slug ) {
+		$api = plugins_api(
+			'plugin_information',
+			array(
+				'slug' => $plugin_slug,
+			)
+		);
+
+		if ( is_wp_error( $api ) ) {
+			$response = array(
+				'message' => 'Error while installing plugin',
+			);
+			wp_send_json_error( $response, 500 );
+		}
+
+		// Prepare plugin installation.
+		$upgrader = new Plugin_Upgrader( new Automatic_Upgrader_Skin() );
+
+		// Install the plugin.
+		$install = $upgrader->install( $api->download_link );
+
+		return $install;
+	}
+
+	/**
+	 * Deactivate the plugin.
+	 *
+	 * @since     1.4
+	 */
+	public static function responsive_addons_for_elementor_deactivate_plugin() {
+		if ( is_plugin_active( 'responsive-addons-for-elementor/responsive-addons-for-elementor.php' ) ) {
+			deactivate_plugins( 'responsive-elementor-addons/responsive-elementor-addons.php' );
+
+			global $blog_id;
+			if ( is_multisite() ) {
+				switch_to_blog( $blog_id );
+				update_option( 'rea_to_rae_migration_process', 'complete' );
+				set_transient( 'rea_to_rae_migration_complete', 'yes' );
+				restore_current_blog();
+			} else {
+				update_option( 'rea_to_rae_migration_process', 'complete' );
+				set_transient( 'rea_to_rae_migration_complete', 'yes' );
+			}
+
+			$response = array(
+				'message'       => 'Migration Complete',
+				'response_type' => 'success',
+			);
+
+			if ( ! self::$is_migrated ) {
+				$response['message'] = 'No Data Found for Migration';
+			}
+
+			wp_send_json_success( $response );
+		}
+	}
+
+	/**
+	 * Migration Page shown to user after migration is done.
+	 *
+	 * @param array  $actions     Action values provided on the plugins page.
+	 * @param string $plugin_file Plugin slug.
+	 *
+	 * @since 1.4
+	 */
+	public function rael_disable_responsive_elementor_addons_activation( $actions, $plugin_file ) {
+
+		$plugin_to_disable = 'responsive-elementor-addons/responsive-elementor-addons.php';
+
+		if ( $plugin_file === $plugin_to_disable ) {
+			unset( $actions['activate'] );
+		}
+
+		return $actions;
+	}
+
+	/**
+	 * Migration Consent Popup.
+	 *
+	 * @since 1.4
+	 */
+	public function rael_migration_consent_popup() {
+		?>
+		<div class="rael-consent-popup-form-wrapper-outer">
+			<div class="rael-consent-popup-form-wrapper">
+				<form class="rael-consent-popup-form">
+					<div>
+						<span class="dashicons dashicons-no rael-consent-popup-form-close-btn"></span>
+						<div class="rael-consent-popup-form-content">
+							<p class="rael-consent-popup-form-title"><?php esc_html_e( 'We\'re migrating your existing designs from Responsive Elementor Addons(old) plugin to Responsive Addons for Elementor(new). This will deactivate the old plugin and activate the latest version of the new plugin. We highly recommend to take a backup of your website before starting the migration process.', 'responsive-addons-for-elementor' ); ?></p>
+							<div class="rael-consent-popup-form-inputs">
+								<div class="rael-consent-popup-form-input-choices">
+									<div class="rael-consent-popup-form-input-checkbox-wrapper">
+										<input type="checkbox" name="rael-consent-popup-form-checkbox" id="rael-consent-popup-form-checkbox">
+										<label class="rael-consent-popup-form-checkbox-label" for="rael-consent-popup-form-checkbox"><?php esc_html_e( 'I confirm that I’ve taken a backup of my website and start the migration process.', 'responsive-addons-for-elementor' ); ?></label>
+									</div>
+									<button type="button" class="button button-primary button-active" data-nonce="<?php echo esc_html( wp_create_nonce( 'rael-rea-to-rae-migration' ) ); ?>" id="rael-consent-popup-form-migrate" disabled><?php esc_html_e( 'Start Migration', 'responsive-addons-for-elementor' ); ?></button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Ask for Review.
+	 *
+	 * @since 1.4
+	 */
+	public function rael_ask_for_review_notice() {
+
+		if ( isset( $_GET['page'] ) && ( 'responsive' === $_GET['page'] ) ) {
+			return;
+		}
+		// Checking if the review notice was permanently dismissed
+		$review_dismissed = get_option( 'responsive_addons_for_elementor_review_notice_dismissed' );
+		if ( $review_dismissed ) {
+			return; 
+		}
+		if (false === get_option( 'responsive_addons_for_elementor_review_notice' ) ) {
+			set_transient( 'responsive_addons_for_elementor_intial_timeout', true, 30 * 24 * 60 * 60 );
+			update_option( 'responsive_addons_for_elementor_review_notice', true );
+		}
+		$maybe_later_active = (bool) get_transient( 'responsive_addons_for_elementor_timeout' );
+		if ( $maybe_later_active ) {
+			return; 
+		}
+		
+		// Fetch the count of posts with RAE widgets
+		$count = $this->rael_get_published_with_widgets_count(); 
+		 
+		// Check if any template was imported.
+		$any_template_imported = (bool) get_transient( 'rael_template_imported_any' );
+    	
+		$thirty_day_delay_passed = get_option( 'responsive_addons_for_elementor_initial_timeout' ) ? true : false;
+
+		if ( $thirty_day_delay_passed || $count >= 5 || $any_template_imported ) 
+		{
+
+			$image_path = RAEL_URL . 'admin/images/rae-logo-mini.png';
+			printf(
+				'<div class="notice notice-warning rael-ask-for-review-notice">
+					<div class="rael-ask-for-review-notice-container">
+						<div class="rael-notice-image">
+							<img src="%1$s" class="custom-logo" alt="Responsive Addons for Elementor" itemprop="logo">
+						</div>
+						<div class="rael-notice-content">
+							<div class="rael-notice-heading">
+								%3$s
+							</div>
+							%4$s<br />
+							<div class="rael-review-notice-container">
+								<a href="%2$s" class="responsive-notice-close responsive-review-notice button-primary" target="_blank">
+								%5$s
+								</a>
+								<span class="dashicons dashicons-calendar"></span>
+								<a href="?responsive-addons-for-elementor-review-notice-change-timeout=true" data-repeat-notice-after="60" class="responsive-notice-close responsive-review-notice">
+								%6$s
+								</a>
+								<span class="dashicons dashicons-smiley"></span>
+								<a href="?responsive-addons-for-elementor-notice-dismissed=true" class="responsive-notice-close responsive-review-notice">
+								%7$s
+								</a>
+							</div>
+						</div>
+					</div>
+					<div class="rael-review-notice-dismiss">
+						<a href="?responsive-addons-for-elementor-notice-dismissed=true"><span class="dashicons dashicons-no"></span></a>
+					</div>
+				</div>',
+				esc_url( $image_path ),
+				'https://wordpress.org/support/plugin/responsive-addons-for-elementor/reviews/#new-post',
+				esc_html__( 'Hello! Seems like you have used Responsive Addons for Elementor plugin to build this website — Thanks a ton!', 'responsive-addons-for-elementor' ),
+				esc_html__( 'Could you please do us a BIG favor and give it a 5-star rating on WordPress? This would boost our motivation and help other users make a comfortable decision while choosing the Responsive Addons for Elementor plugin.', 'responsive-addons-for-elementor' ),
+				esc_html__( 'Ok, you deserve it', 'responsive-addons-for-elementor' ),
+				esc_html__( 'Nope, maybe later', 'responsive-addons-for-elementor' ),
+				esc_html__( 'I already did', 'responsive-addons-for-elementor' )
+			);
+			do_action( 'tag_review' );
+		}
+		
+	}
+
+	/**
+	 * Removed Ask For Review Admin Notice when dismissed.
+	 */
+	public function rael_notice_dismissed() {
+		if ( isset( $_GET['responsive-addons-for-elementor-notice-dismissed'] ) ) {
+			update_option( 'responsive_addons_for_elementor_review_notice_dismissed', true );
+			wp_safe_redirect( remove_query_arg( array( 'responsive-addons-for-elementor-notice-dismissed' ), wp_get_referer() ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Removed Ask For Review Admin Notice when dismissed.
+	 */
+	public function rael_notice_change_timeout() {
+		if ( isset( $_GET['responsive-addons-for-elementor-review-notice-change-timeout'] ) ) {
+			set_transient( 'responsive_addons_for_elementor_timeout', true, DAY_IN_SECONDS );
+			wp_safe_redirect( remove_query_arg( array( 'responsive-addons-for-elementor-review-notice-change-timeout' ), wp_get_referer() ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Enqueue Dashicons.
+	 */
+	public function rael_enqueue_dashicons() {
+		// Enqueue the dashicons stylesheet.
+		wp_enqueue_style( 'dashicons' );
+	}
+
+	/**
+	 * This function runs when WordPress completes its upgrade process
+	 * It iterates through each plugin updated to see if ours is included
+	 *
+	 * @param $upgrader_object Array
+	 * @param $options Array
+	 * @since 1.6.6
+	 */
+	public function rael_wp_upe_upgrade_completed( $upgrader_object, $options ) {
+		// The path to our plugin's main file
+		$our_plugin = RAEL_PATH;
+		if ( isset( $options['action'], $options['type'], $options['plugins'] ) &&
+			'update' === $options['action'] &&
+			'plugin' === $options['type'] ) {
+
+			// Iterate through the updated plugins
+			foreach ( $options['plugins'] as $plugin ) {
+				if ( $plugin === $our_plugin ) {
+					// added new theme builder widgets in the dashboard.
+					include_once RAEL_DIR . 'includes/class-responsive-addons-for-elementor-widgets-updater.php';
+					$rael_widgets_data = new Responsive_Addons_For_Elementor_Widgets_Updater();
+
+					$rael_widgets_data->insert_widgets_data();
+				}
+			}
+		}
+	}
+
+	/**
+	 * RAEL Widgets Display.
+	 *
+	 * @since 1.0.0
+	 */
+	public function responsive_addons_for_elementor_widgets_display() {
+		include_once RAEL_DIR . 'includes/class-responsive-addons-for-elementor-widgets-updater.php';
+		$rael_widgets_data = new Responsive_Addons_For_Elementor_Widgets_Updater();
+
+		$rael_path = 'responsive-addons-for-elementor/responsive-addons-for-elementor.php';
+
+		// Get the current value of 'rael_widgets_data_update' option
+		$exist_rael_widgets_data_update = get_option( 'rael_widgets_data_update', false );
+
+		// If the option does not exist, add it with a value of false
+		if ( ! $exist_rael_widgets_data_update ) {
+			$rael_widgets_data->insert_widgets_data();
+			update_option( 'rael_widgets_data_update', true );
+		}
+
+		$exist_rael_theme_builder_widgets_data_update = get_option( 'rael_theme_builder_widgets_data_update', false );
+		if ( ! $exist_rael_theme_builder_widgets_data_update ) {
+			$rael_widgets_data->insert_widgets_data();
+			update_option( 'rael_theme_builder_widgets_data_update', true );
+		}
+
+		$exist_rael_facebook_feed_widgets_data_update = get_option( 'rael_facebook_feed_widgets_data_update', false );
+		if ( ! $exist_rael_facebook_feed_widgets_data_update ) {
+			$rael_widgets_data->insert_widgets_data();
+			update_option( 'rael_facebook_feed_widgets_data_update', true );
+		}
+
+		// Getting the last stored plugin version; fallback to '0' for older installs
+		$last_version = get_option( 'rael_last_version', '0' );
+
+		if ( version_compare( RAEL_VER, $last_version, '>' ) ) {
+
+			// Reset and insert widgets if updated
+			$rael_widgets_data->reset_widgets_data();
+			$rael_widgets_data->insert_widgets_data();
+
+			// Update stored version
+			update_option( 'rael_last_version', RAEL_VER );
+		}
+	
+
+		if ( ! function_exists( 'get_plugins' ) ) {
+			include_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$installed_plugins = get_plugins();
+
+		if ( isset( $installed_plugins[ $rael_path ] ) ) {
+			$installed_rael_version = $installed_plugins[ $rael_path ]['Version'];
+			$widgets = get_option( 'rael_widgets' );
+
+			if ( $widgets && version_compare( RAEL_VER, $installed_rael_version, '>' ) ) {
+				$rael_widgets_data->reset_widgets_data();
+				$widgets = get_option( 'rael_widgets' );
+			}
+
+			if ( ! $widgets ) {
+				$rael_widgets_data->insert_widgets_data();
+			} elseif ( version_compare( RAEL_VER, $installed_rael_version, '>' ) ) {
+				$this->update_frontend_assets( $widgets, true );
+			}
+    	}
+	}
+
+	/**
+	 * Retrieve internationalization words or phrases.
+	 *
+	 * @return array An array containing translated words.
+	 */
+	public function get_i18n_words() {
+		$words = array(
+			'loading' => esc_html__( 'Loading', 'responsive-addons-for-elementor' ),
+			'added'   => esc_html__( 'Added', 'responsive-addons-for-elementor' ),
+			'compare' => esc_html__( 'Compare', 'responsive-addons-for-elementor' ),
+		);
+
+		return $words;
+	}
+
+	/**
+	 * Register all of the hooks related to the admin area functionality
+	 * of the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_admin_hooks() {
+		new Responsive_Addons_For_Elementor_Admin_Settings();
+	}
+
+	/**
+	 * Responsible for defining all actions that occur in the admin area.
+	 */
+	private function load_dependencies() {
+		/**
+		 * The class responsible for defining all actions that occur in the admin area.
+		 */
+		require_once RAEL_DIR . 'admin/class-responsive-addons-for-elementor-admin-settings.php';
+		require_once RAEL_DIR . 'admin/classes/class-responsive-addons-for-elementor-attachment.php';
+		include_once RAEL_DIR . 'traits/responsive-addons-for-elementor-template-query.php';
+		include_once RAEL_DIR . 'helper/class-helper.php';
+		include_once RAEL_DIR . 'admin/class-responsive-addons-for-elementor-rst-install-helper.php';
+		require_once RAEL_DIR . 'ext/cross-site-cp/class-raelcrosssitecopypasteloader.php';
+		include_once RAEL_DIR . 'traits/responsive-addons-for-elementor-singleton.php';
+		include_once RAEL_DIR . 'traits/responsive-addons-for-elementor-missing-dependency.php';
+		require_once RAEL_DIR . 'traits/responsive-addons-for-elementor-products-compare.php';
+		require_once RAEL_DIR . 'traits/responsive-addons-for-elementor-helperwoocheckout.php';
+		require_once RAEL_DIR . 'traits/responsive-addons-for-elementor-woo-checkout-helper.php';
+	}
+
+	/**
+	 * Enqueues Widgets scripts
+	 */
+	public function widget_scripts() {
+		wp_enqueue_script( 'rael-elementor-widgets', RAEL_ASSETS_URL . 'dist/js/widgets/rael-widgets.min.js', 'jquery', RAEL_VER, true );
+		wp_enqueue_script( 'wp-mediaelement' );
+	}
+
+	/**
+	 * To check Minimum Elementor Version and loads widgets file.
+	 */
+	public function init() {
+
+		// Check if Elementor installed and activated.
+		if ( ! did_action( 'elementor/loaded' ) ) {
+			add_action( 'admin_notices', array( $this, 'admin_notice_missing_main_plugin' ) );
+			if ( get_option( 'elementor_experiment-e_swiper_latest' ) ) {
+				update_option( 'elementor_experiment-e_swiper_latest', 'inactive' );
+			}
+			return;
+		} else {
+			add_option( 'elementor_experiment-e_swiper_latest', 'inactive' );
+		}
+
+		// Check for required minimum Elementor version.
+		if ( defined( 'ELEMENTOR_VERSION' ) && ! version_compare( ELEMENTOR_VERSION, self::MINIMUM_ELEMENTOR_VERSION, '>=' ) ) {
+			add_action( 'admin_notices', array( $this, 'admin_notice_minimum_elementor_version' ) );
+			return;
+		}
+
+		$this->include_widget_manager();
+		$this->include_modules_manager();
+		$this->include_dynamic_tags_manager();
+	}
+
+	/**
+	 * Admin Notices
+	 */
+	public function admin_notice_missing_main_plugin() {
+
+		$file_path         = 'elementor/elementor.php';
+		$installed_plugins = get_plugins();
+
+		if ( isset( $installed_plugins[ $file_path ] ) ) {
+
+			if ( ! current_user_can( 'activate_plugins' ) ) {
+				return;
+			}
+
+			$plugin                   = 'elementor/elementor.php';
+			$elementor_activation_url = wp_nonce_url( 'plugins.php?action=activate&amp;plugin=' . $plugin . '&amp;plugin_status=all&amp;paged=1&amp;s', 'activate-plugin_' . $plugin );
+
+			$message = sprintf(
+			/* translators: Name of plugin and Elementor */
+				esc_html__( '"%1$s" requires "%2$s" to be activated.', 'responsive-addons-for-elementor' ),
+				'<strong>' . esc_html__( 'Responsive Addons for Elementor', 'responsive-addons-for-elementor' ) . '</strong>',
+				'<strong>' . esc_html__( 'Elementor', 'responsive-addons-for-elementor' ) . '</strong>'
+			);
+
+			$message .= '<p>' . sprintf( '<a href="%s" class="button-primary">%s</a>', $elementor_activation_url, __( 'Activate Elementor Now', 'responsive-addons-for-elementor' ) ) . '</p>';
+
+			printf( '<div class="notice notice-error"><p>%1$s</p></div>', wp_kses_post( $message ) );
+		} else {
+			if ( ! current_user_can( 'install_plugins' ) ) {
+				return;
+			}
+
+			$elementor_install_url = wp_nonce_url( self_admin_url( 'update.php?action=install-plugin&plugin=elementor' ), 'install-plugin_elementor' );
+			$message               = sprintf(
+			/* translators: Name of plugin and Elementor */
+				esc_html__( '"%1$s" requires "%2$s" to be installed.', 'responsive-addons-for-elementor' ),
+				'<strong>' . esc_html__( 'Responsive Addons for Elementor', 'responsive-addons-for-elementor' ) . '</strong>',
+				'<strong>' . esc_html__( 'Elementor', 'responsive-addons-for-elementor' ) . '</strong>'
+			);
+
+			$message .= '<p>' . sprintf( '<a href="%s" class="button-primary">%s</a>', $elementor_install_url, __( 'Install Elementor Now', 'responsive-addons-for-elementor' ) ) . '</p>';
+
+			printf( '<div class="notice notice-error"><p>%1$s</p></div>', wp_kses_post( $message ) );
+		}
+	}
+
+	/**
+	 * Admin notice to check for the minimum Elementor version
+	 */
+	public function admin_notice_minimum_elementor_version() {
+
+		$message = sprintf(
+		/* translators: Name of plugin, Elementor and minimum elementor version */
+			esc_html__( '"%1$s" requires "%2$s" version %3$s or greater.', 'responsive-addons-for-elementor' ),
+			'<strong>' . esc_html__( 'Responsive Addons for Elementor', 'responsive-addons-for-elementor' ) . '</strong>',
+			'<strong>' . esc_html__( 'Elementor', 'responsive-addons-for-elementor' ) . '</strong>',
+			self::MINIMUM_ELEMENTOR_VERSION
+		);
+
+		printf( '<div class="notice notice-warning is-dismissible"><p>%1$s</p></div>', esc_html( $message ) );
+	}
+
+	/**
+	 * Include widget manager
+	 */
+	public function include_widget_manager() {
+		// Load the widgets.
+		include RAEL_DIR . 'includes/widgets-manager/class-responsive-addons-for-elementor-widgets-manager.php';
+	}
+
+	/**
+	 * Include modules manager
+	 */
+	public function include_modules_manager() {
+		// Load the modules.
+		require RAEL_DIR . 'includes/modules-manager/class-modules-manager.php';
+	}
+
+	/**
+	 * Include dynamic tags manager
+	 */
+	public function include_dynamic_tags_manager() {
+		// Load the modules.
+		require RAEL_DIR . 'includes/dynamic-tags-manager/class-dynamic-tags-manager.php';
+	}
+
+	/**
+	 * Enqueue frontend scripts
+	 */
+	public function enqueue_frontend_scripts() {
+		wp_enqueue_script(
+			'rael-frontend',
+			RAEL_URL . 'assets/dist/js/frontend/rael-frontend.min.js',
+			array(
+				'jquery',
+				'elementor-frontend',
+				'isotope'
+			),
+			RAEL_VER,
+			true
+		);
+		// Pass data to JS to show review notice on template import
+		$importparams = array(
+			'ajax_url'   => admin_url( 'admin-ajax.php' ),
+			'rael_import_nonce' => wp_create_nonce( 'rael_import_nonce' ),
+			'post_id'    => get_the_ID(),
+		);
+		wp_localize_script( 'rael-frontend' , 'rael_import_review', $importparams );
+
+
+		if ( class_exists( 'WooCommerce' ) ) {
+			$has_cart = is_a( WC()->cart, 'WC_Cart' );
+			if ( $has_cart ) {
+				$locale_settings = array(
+					'menu_cart' => array(
+						'cart_page_url'     => wc_get_cart_url(),
+						'checkout_page_url' => wc_get_checkout_url(),
+					),
+				);
+			}
+		}
+
+		$locale_settings['ajaxurl']              = admin_url( 'admin-ajax.php' );
+		$locale_settings['nonce']                = wp_create_nonce( 'facebook_feed_ajax_nonce' );
+		$locale_settings['rael_mailchimp_nonce'] = wp_create_nonce( 'rael_mailchimp_subscribe_nonce' );
+		$locale_settings['i18n']                 = $this->get_i18n_words();
+
+		wp_localize_script(
+			'rael-frontend',
+			'localize',
+			$locale_settings
+		);
+
+		Utils::print_js_config(
+			'rael-frontend',
+			'RAELFrontendConfig',
+			$locale_settings
+		);
+		if (Helper::is_extension_active('particle-backgrounds')) {
+			wp_localize_script(
+				'rael-particles',
+				'rael_particles',
+				array(
+					'particles_lib' => RAEL_ASSETS_URL . '/lib/particles/rael-particles.min.js',
+					'snowflakes_image' => RAEL_ASSETS_URL . '/images/snowflake.svg',
+					'gift' => RAEL_ASSETS_URL . '/images/gift.png',
+					'tree' => RAEL_ASSETS_URL . '/images/tree.png',
+					'skull' => RAEL_ASSETS_URL . '/images/skull.png',
+					'ghost' => RAEL_ASSETS_URL . '/images/ghost.png',
+					'moon' => RAEL_ASSETS_URL . '/images/moon.png',
+					'bat' => RAEL_ASSETS_URL . '/images/bat.png',
+					'pumpkin' => RAEL_ASSETS_URL . '/images/pumpkin.png',
+				)
+			);
+		}
+	}
+
+	/**
+	 * Enqueue Styles
+	 */
+	public function enqueue_styles() {
+
+		$frontend_file_url = RAEL_ASSETS_URL . 'dist/css/frontend/rael-frontend.min.css';
+
+		if ( ! Icons_Manager::is_migration_allowed() ) {
+			wp_enqueue_style( 'font-awesome' );
+		} else {
+			Icons_Manager::enqueue_shim();
+		}
+
+		wp_enqueue_style(
+			'rael-frontend',
+			$frontend_file_url,
+			array(),
+			RAEL_VER
+		);
+
+		wp_enqueue_style( 'wp-mediaelement' );
+
+		if ( class_exists( 'GFForms' ) ) {
+			$gf_forms = \RGFormsModel::get_forms( null, 'title' );
+
+			foreach ( $gf_forms as $form ) {
+
+				if ( '0' !== $form->id ) {
+					wp_enqueue_script( 'gform_gravityforms' );
+					gravity_form_enqueue_scripts( $form->id );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Load assets
+	 */
+	public function load_assets() {
+
+		$rael_widgets  = get_option( 'rael_widgets' );
+		$included_libs = array();
+
+		// Localize the Swiper Library on the basis of version.
+		$swiper_class = array( 'swiper' => 'swiper-container-' );
+		if ( defined( 'RAEL_ELEMENTOR_SWIPER' ) && true === RAEL_ELEMENTOR_SWIPER ) {
+			$swiper_class = array( 'swiper' => 'swiper-' );
+		}
+
+		foreach ( $rael_widgets as $rael_widget ) {
+			if ( $rael_widget['status'] ) {
+				switch ( $rael_widget['title'] ) {
+					case 'product-carousel':
+					case 'woo-products':
+						if ( ! isset( $included_libs['rael-photoswipe'] ) ) {
+							$included_libs['rael-photoswipe'] = true;
+							wp_register_script( 'rael-photoswipe', RAEL_ASSETS_URL . 'lib/photoswipe/photoswipe.min.js', array( 'jquery', 'masonry', 'imagesloaded' ), RAEL_VER, true );
+							wp_register_script( 'rael-photoswipe-ui', RAEL_ASSETS_URL . 'lib/photoswipe/photoswipe-ui-default.min.js', array(), RAEL_VER, true );
+							wp_register_script( 'rael-scripts', RAEL_ASSETS_URL . 'dist/js/photoswipe/rael-photoswipe.min.js', array( 'rael-photoswipe', 'rael-photoswipe-ui' ), RAEL_VER, true );
+							wp_register_style( 'rael-photoswipe-style', RAEL_ASSETS_URL . 'lib/photoswipe/photoswipe.min.css', null, RAEL_VER );
+							wp_enqueue_style( 'rael-photoswipe-style' );
+							wp_register_style( 'rael-photoswipe-default-skin', RAEL_ASSETS_URL . 'lib/photoswipe/default-skin.min.css', null, RAEL_VER );
+							wp_enqueue_style( 'rael-photoswipe-default-skin' );
+						}
+						wp_register_script(
+							'isotope',
+							RAEL_ASSETS_URL . 'lib/isotope/isotope.min.js',
+							[ 'jquery' ],
+							RAEL_VER,
+							true
+						);
+
+						if ( ! isset( $included_libs['rael-swiper'] ) ) {
+							$included_libs['rael-swiper'] = true;
+							wp_register_script( 'rael-swiper', RAEL_ASSETS_URL . 'lib/swiper/swiper.min.js', array(), RAEL_VER, true );
+							wp_localize_script( 'rael-swiper', 'rael_elementor_swiper', $swiper_class );
+						}
+						
+						break;
+					case 'image-gallery':
+						if ( ! isset( $included_libs['rael-fancybox'] ) ) {
+							$included_libs['rael-fancybox'] = true;
+							wp_register_script( 'rael-fancybox', RAEL_ASSETS_URL . 'lib/fancybox/jquery_fancybox.min.js', array( 'jquery' ), RAEL_VER, true );
+							wp_register_style( 'rael-fancybox-style', RAEL_ASSETS_URL . 'lib/fancybox/jquery-fancybox.min.css', null, RAEL_VER );
+							wp_enqueue_style( 'rael-fancybox-style' );
+						}
+						wp_register_script( 'rael-justified', RAEL_ASSETS_URL . 'lib/justifiedgallery/justifiedgallery.min.js', array( 'jquery' ), RAEL_VER, true );
+						wp_register_script( 'rael-element-resize', RAEL_ASSETS_URL . 'lib/jquery-element-resize/jquery_resize.min.js', array( 'jquery' ), RAEL_VER, true );
+						if ( ! isset( $included_libs['rael-isotope'] ) ) {
+							$included_libs['rael-isotope'] = true;
+							wp_register_script( 'rael-isotope', RAEL_ASSETS_URL . 'lib/isotope/isotope.min.js', array( 'jquery' ), RAEL_VER, true );
+						}
+						if ( ! isset( $included_libs['rael-swiper'] ) ) {
+							$included_libs['rael-swiper'] = true;
+							wp_register_script( 'rael-swiper', RAEL_ASSETS_URL . 'lib/swiper/swiper.min.js', array(), RAEL_VER, true );
+							wp_localize_script( 'rael-swiper', 'rael_elementor_swiper', $swiper_class );
+						}
+						break;
+					case 'twitter-feed':
+						if ( ! isset( $included_libs['rael-isotope'] ) ) {
+							$included_libs['rael-isotope'] = true;
+							wp_register_script( 'rael-isotope', RAEL_ASSETS_URL . 'lib/isotope/isotope.min.js', array( 'jquery' ), RAEL_VER, true );
+						}
+						
+						wp_register_script(
+							'rael-twitter-feed', 
+							RAEL_ASSETS_URL . 'dist/js/frontend/twitter-feed/rael-twitter-feed.min.js', 
+							array('jquery', 'rael-isotope', 'imagesloaded'), 
+							RAEL_VER, 
+							true
+						);
+						break;
+					case 'nav-menu':
+						wp_register_script( 'rael-smartmenus', RAEL_ASSETS_URL . 'lib/smartmenus/jquery.smartmenus.min.js', array(), RAEL_VER, true );
+						break;
+					case 'video':
+						wp_register_script( 'rael-magnific-popup', RAEL_ASSETS_URL . 'lib/magnific-popup/jquery.magnific-popup.min.js', array(), RAEL_VER, true );
+						wp_register_style( 'rael-magnific-popup-style', RAEL_ASSETS_URL . 'lib/magnific-popup/magnific-popup.min.css', null, RAEL_VER );
+						wp_enqueue_style( 'rael-magnific-popup-style' );
+						break;
+					case 'lottie':
+						wp_register_script( 'rael-lottie-lib', RAEL_ASSETS_URL . 'lib/lottie/lottie.min.js', array(), RAEL_VER, true );
+						break;
+					case 'sticky-video':						
+						if ( ! isset( $included_libs['plyr'] ) ) {
+							$included_libs['plyr'] = true;
+							wp_register_script( 'plyr', RAEL_ASSETS_URL . 'lib/plyr/plyr.min.js', array(), RAEL_VER, true );
+
+						}
+						if ( ! isset( $included_libs['rael-sticky-video'] ) ) {
+							$included_libs['rael-sticky-video'] = true;
+							wp_register_script(
+								'rael-sticky-video',
+								RAEL_ASSETS_URL . 'dist/js/frontend/sticky-video/rael-sticky-video.min.js',
+								array( 'elementor-frontend','jquery', 'plyr' ),
+								RAEL_VER,
+								true
+							);
+						}
+						wp_register_style( 'rael-plyr-style', RAEL_ASSETS_URL . 'lib/plyr/plyr.min.css', null, RAEL_VER );
+						wp_enqueue_style( 'rael-plyr-style' );
+
+						break;
+					case 'content-ticker':
+					case 'logo-carousel':
+					case 'media-carousel':
+					case 'post-carousel':
+					case 'reviews':
+						if ( ! isset( $included_libs['rael-swiper'] ) ) {
+							$included_libs['rael-swiper'] = true;
+							wp_register_script( 'rael-swiper', RAEL_ASSETS_URL . 'lib/swiper/swiper.js', array(), RAEL_VER, true );
+							wp_localize_script( 'rael-swiper', 'rael_elementor_swiper', $swiper_class );
+							
+						}
+						wp_register_script( 'rael-media-carousel', RAEL_ASSETS_URL . 'dist/js/frontend/media-carousel/media-carousel.min.js', array('jquery', 'elementor-frontend'), RAEL_VER, true);// . $ext );
+
+
+
+						// wp_enqueue_script(
+						// 	'rael-frontend',
+						// 	RAEL_URL . 'assets/dist/js/frontend/rael-frontend.min.js',
+						// 	array(
+						// 		'elementor-frontend',
+						// 	),
+						// 	RAEL_VER,
+						// 	true
+						// );
+
+						break;
+					case 'slider':
+					case 'testimonial-slider':
+						if ( ! isset( $included_libs['rael-swiper'] ) ) {
+							$included_libs['rael-swiper'] = true;
+							wp_register_script( 'rael-swiper', RAEL_ASSETS_URL . 'lib/swiper/swiper.js', array(), RAEL_VER, true );
+							wp_localize_script( 'rael-swiper', 'rael_elementor_swiper', $swiper_class );
+						}
+						wp_register_script( 'rael-testimonial-marquee', RAEL_ASSETS_URL . 'dist/js/frontend/testimonial/rael-testimonial-marquee.min.js', array(), RAEL_VER,true );
+
+						break;
+					case 'banner':
+						wp_register_script( 'rael-tilt', RAEL_ASSETS_URL . 'lib/universal-tilt/universal-tilt.min.js', array(), RAEL_VER, true );
+						break;
+					case 'fancy-text':
+						wp_register_script( 'rael-morphext', RAEL_ASSETS_URL . 'lib/morphext/morphext.min.js', array(), RAEL_VER, true );
+						wp_register_script( 'rael-typed', RAEL_ASSETS_URL . 'lib/typed/typed.min.js', array(), RAEL_VER, true );
+						break;
+					case 'data-table':
+						wp_register_script( 'rael-table-sorter', RAEL_ASSETS_URL . 'lib/table-sorter/jquery.tablesorter.min.js', array(), RAEL_VER, true );
+						break;
+					case 'progress-bar':
+						wp_register_script( 'rael-inview', RAEL_ASSETS_URL . 'lib/inview/inview.min.js', array(), RAEL_VER, true );
+						break;
+					case 'team-member':
+						if ( ! isset( $included_libs['rael-magnific-popup'] ) ) {
+							$included_libs['rael-magnific-popup'] = true;
+							wp_register_script( 'rael-magnific-popup', RAEL_ASSETS_URL . 'lib/magnific-popup/jquery.magnific-popup.min.js', array(), RAEL_VER, true );
+							wp_register_style( 'rael-magnific-popup-style', RAEL_ASSETS_URL . 'lib/magnific-popup/magnific-popup.min.css', null, RAEL_VER );
+							wp_enqueue_style( 'rael-magnific-popup-style' );
+						}
+						break;
+					case 'before-after-slider':
+						if ( ! isset( $included_libs['rael-twentytwenty'] ) ) {
+							$included_libs['rael-twentytwenty'] = true;
+							wp_register_script( 'rael-twentytwenty', RAEL_ASSETS_URL . 'lib/jquery-twentytwenty/jquery-twentytwenty.min.js', array( 'jquery' ), RAEL_VER, true );
+						}
+						if( ! isset( $included_libs['rael-event-move'] ) ) {
+							$included_libs['rael-event-move'] = true;
+							wp_register_script( 'rael-event-move', RAEL_ASSETS_URL . 'lib/jquery-event-move/jquery-event-move.min.js', array( 'jquery' ), RAEL_VER, true );
+						}
+            			break;
+					case 'stacking-cards':
+						// Load GSAP once
+						if ( ! isset( $included_libs['gsap'] ) ) {
+							$included_libs['gsap'] = true;
+							wp_register_script(
+								'gsap',
+								RAEL_ASSETS_URL . 'lib/gsap/gsap.min.js',
+								array(),
+								RAEL_VER,
+								true
+							);
+						}
+
+						// Load GSAP ScrollTrigger once
+						if ( ! isset( $included_libs['gsap-scrolltrigger'] ) ) {
+							$included_libs['gsap-scrolltrigger'] = true;
+							wp_register_script(
+								'gsap-scrolltrigger',
+								RAEL_ASSETS_URL . 'lib/gsap/ScrollTrigger.min.js',
+								array( 'gsap' ),
+								RAEL_VER,
+								true
+							);
+						}
+						 // Load Stacking Cards script
+						if ( ! isset( $included_libs['rael-stacking-cards'] ) ) {
+							$included_libs['rael-stacking-cards'] = true;
+							wp_register_script(
+								'rael-stacking-cards',
+								RAEL_ASSETS_URL . 'dist/js/frontend/stacking-cards/rael-stacking-cards.min.js',
+								array( 'elementor-frontend', 'jquery', 'gsap', 'gsap-scrolltrigger' ),
+								RAEL_VER,
+								true
+							);
+						}
+						break;
+					case 'facebook-feed':
+						wp_register_script( 'rael-facebook-feed', RAEL_ASSETS_URL . 'dist/js/frontend/facebook-feed/rael-facebook-feed.min.js', array( 'jquery' ), RAEL_VER, true );
+						wp_localize_script('rael-facebook-feed', 'rael_facebook_feed_vars', array(
+							'ajaxurl' => admin_url('admin-ajax.php'),
+							'nonce' => wp_create_nonce('rael_facebook_feed_nonce')
+						));
+						break;
+					case 'posts':
+						wp_enqueue_script( 'rael-posts', RAEL_ASSETS_URL . 'dist/js/frontend/posts/rael-posts.min.js', array( 'jquery','elementor-frontend' ), RAEL_VER, true );
+						wp_enqueue_script( 'rael-posts-cards', RAEL_ASSETS_URL . 'dist/js/frontend/posts/rael-posts-cards.min.js', array( 'jquery','elementor-frontend' ), RAEL_VER, true );
+
+						wp_localize_script('rael-posts', 'raelpostsvar', array(
+							'ajaxurl' => admin_url('admin-ajax.php'),
+							'nonce' => wp_create_nonce('rael_posts_nonce')
+						));
+						break;
+
+				}
+			}
+		}
+		wp_register_style( 'rael-animate-style', RAEL_ASSETS_URL . 'lib/animate/animate.min.css', null, RAEL_VER );
+		wp_enqueue_style( 'rael-animate-style' );
+		if (Helper::is_extension_active('particle-backgrounds')) {
+
+		wp_enqueue_script( 'rael-particles', RAEL_ASSETS_URL . 'lib/particles/rael-particles.js', array(), RAEL_VER, true );
+
+		wp_register_style( 'rael-particles-style', RAEL_ASSETS_URL . 'lib/particles/rael-particles.min.css', null, RAEL_VER );
+
+			wp_register_style('rael-particles-style-rtl', RAEL_ASSETS_URL . 'lib/particles/rael-particles-rtl.min.css', null, RAEL_VER);
+			wp_enqueue_style('rael-particles-style');
+			wp_enqueue_style('rael-particles-style-rtl');
+		}
+		if (Helper::is_extension_active('sticky-section')) {
+			wp_register_style('rael-sticky', RAEL_URL . 'admin/css/rael-sticky.css', array(), RAEL_VER);
+			wp_enqueue_style('rael-sticky');
+		}
+		wp_enqueue_script(
+			'jet-resize-sensor',
+			RAEL_ASSETS_URL . 'lib/sticky-sidebar/ResizeSensor.min.js',
+			array( 'jquery' ),
+			RAEL_VER,
+			true
+		);
+
+		wp_enqueue_script(
+			'jet-sticky-sidebar',
+			RAEL_ASSETS_URL . 'lib/sticky-sidebar/sticky-sidebar.min.js',
+			array( 'jquery', 'jet-resize-sensor' ),
+			RAEL_VER,
+			true
+		);
+		// For hiding title in Post Title widget if Hide title option of Post settings is enabled
+		if ( \Elementor\Plugin::$instance->editor->is_edit_mode() ) {
+			wp_enqueue_script(
+				'rael-title-preview',
+				RAEL_ASSETS_URL . 'js/widgets/rael-post-title-preview.js',
+				[ 'jquery' ],
+				RAEL_VER,
+				true
+			);
+		}
+
+	}
+
+	/**
+	 * Enqueue admin styles
+	 */
+	public function enqueue_admin_styles() {
+		wp_register_style(
+			'rael-style',
+			RAEL_ASSETS_URL . 'dist/css/admin/rael-admin.min.css',
+			array(),
+			RAEL_VER
+		);
+
+		wp_enqueue_style( 'rael-style' );
+		
+		wp_add_inline_style(
+			'rael-style',
+			'#elementor-panel__editor__help__link[href^="https://cyberchimps.com/docs/"]::before{
+				content:"";
+				display:inline-block;
+				width:23px;
+				height:23px;
+				margin-right:6px;
+				margin-bottom:3px;
+				background-image:url(' . esc_url( RAEL_URL . 'admin/images/rae-logo-mini.png' ) . ');
+				background-size:contain;
+				background-repeat:no-repeat;
+				background-position:center;
+				vertical-align:middle;
+				border-radius: 5px;
+			}'
+		);
+
+		wp_register_style(
+			'rael-icons',
+			RAEL_URL . 'admin/css/rael-icon.css',
+			array(),
+			RAEL_VER
+		);
+
+		wp_enqueue_style( 'rael-icons' );
+
+		wp_register_script(
+			'rael-elementor-control-js',
+			RAEL_ASSETS_URL . 'dist/js/controls/rael-control.min.js',
+			array( 'jquery-elementor-select2' ),
+			RAEL_VER,
+			false
+		);
+
+		wp_register_script(
+			'rael-elementor-visualselect',
+			RAEL_ASSETS_URL . 'dist/js/controls/rael-visual-select.min.js',
+			array( 'jquery' ),
+			RAEL_VER,
+			false
+		);
+
+		wp_register_script( 
+			'rael-elementor-upsell-icon',
+			RAEL_ASSETS_URL . 'dist/js/controls/rael-elementor-upsell-icon.min.js',
+			array( 'jquery', 'wp-data', 'wp-i18n' ),
+			RAEL_VER,
+			false
+		);
+
+		wp_localize_script( 'rael-elementor-upsell-icon', 'raelElementorUpsellIcon', array(
+			'iconUrl' => RAEL_URL . 'admin/images/rael-logo.svg',
+			'strings' => array(
+				'rael' => __( 'Responsive Addons for Elementor', 'responsive-addons-for-elementor' )
+			)
+		));
+
+		wp_enqueue_script( 'rael-elementor-upsell-icon' );
+	}
+	  /**
+     * Editor scripts (Elementor backend editor)
+     * rael-import-template-notice.js
+     */
+    public function rael_enqueue_editor_scripts() {
+        wp_enqueue_script(
+            'rael-import-notice',
+            RAEL_URL . 'assets/dist/js/editor/rael-import-template-notice.min.js',
+            array('jquery', 'elementor-editor'),
+            RAEL_VER,
+            true
+        );
+
+        wp_localize_script(
+            'rael-import-notice',
+            'rael_editor_data',
+            array(
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'rael_import_nonce' => wp_create_nonce( 'rael_import_nonce' ),
+                'post_id' => get_the_ID(),
+			)
+        );
+    }
+
+	/**
+	 * Include Admin css
+	 *
+	 * @param string $hook Hook.
+	 *
+	 * @return void [description]
+	 */
+	public function responsive_addons_for_elementor_admin_enqueue_styles( $hook = '' ) {
+
+		wp_enqueue_style( 'rael-ask-review-notice', RAEL_URL . 'admin/css/rael-ask-review-notice.css', false, RAEL_VER );
+		wp_enqueue_style( 'rael-migration-notice', RAEL_URL . 'admin/css/rael-migration-notice.css', false, RAEL_VER );
+		wp_enqueue_script( 'rael-migration-notice', RAEL_URL . 'admin/js/rael-migration-notice.js', array( 'jquery' ), RAEL_VER, true );
+		wp_localize_script(
+			'rael-migration-notice',
+			'localize',
+			array(
+				'ajaxurl'  => admin_url( 'admin-ajax.php' ),
+				'raelurl'  => RAEL_URL,
+				'siteurl'  => site_url(),
+				'adminurl' => admin_url(),
+				'nonce'    => wp_create_nonce( 'responsive-addons-for-elementor' ),
+			)
+		);
+
+		if ( false === strpos( $hook, 'page_rael_getting_started' ) ) {
+			return;
+		}
+		// Registering Bootstrap scripts.
+		wp_enqueue_style( 'rael-admin-toastify', RAEL_URL . 'admin/assets/lib/toastify/css/toastify.min.css', false, RAEL_VER );
+		wp_enqueue_script( 'rael-admin-toastify', RAEL_URL . 'admin/assets/lib/toastify/js/toastify-js.js', array( 'jquery' ), RAEL_VER, true );
+
+		// Responsive Ready Sites admin styles.
+		wp_register_style( 'responsive-addons-for-elementor-admin', RAEL_URL . 'admin/css/rael-dashboard.css', false, RAEL_VER );
+		wp_enqueue_style( 'responsive-addons-for-elementor-admin' );
+		wp_enqueue_script(
+			'responsive-addons-for-elementor-admin-jsfile',
+			RAEL_URL . 'admin/js/dashboard/index.js',
+			array( 'jquery', 'react', 'react-dom', 'wp-components' ),
+			RAEL_VER,
+			true
+		);
+
+		wp_enqueue_style( 'wp-components' );
+
+		wp_enqueue_script( 'updates' );
+		// Fetch the current user plan
+		$is_responsivepro_active = is_plugin_active( 'responsivepro/responsivepro.php' );
+		$plan_details = '';
+		$is_connected = false;
+		$email        = '';
+		$plan         = '';
+
+		if ( $is_responsivepro_active && class_exists( 'ResponsivePRO' ) ) {
+			$responsivepro_settings = new ResponsivePRO();
+			$plan_details = $responsivepro_settings->get_responsivepro_plan();
+			if ( class_exists( 'ResponsivePRO_App_Auth' ) ) {
+				$cc_app_auth = new ResponsivePRO_App_Auth();
+				$is_connected = $cc_app_auth->has_auth();
+				if ( $is_connected && class_exists( 'ResponsivePRO_Settings' ) ) {
+					$user  = ResponsivePRO_Settings::get_instance();
+					$email = esc_html( $user->get_email() );
+					$plan  = esc_html( ucwords( $user->get_plan() ) );
+				}
+			}
+		}
+
+		if ( ! $is_connected && is_plugin_active( 'responsive-add-ons/responsive-add-ons.php' ) && class_exists( 'Responsive_Add_Ons_App_Auth' ) ) {
+			require_once RESPONSIVE_ADDONS_DIR . 'includes/class-responsive-add-ons-app-auth.php';
+			$cc_app_auth = new Responsive_Add_Ons_App_Auth();
+			$is_connected = $cc_app_auth->has_auth();
+			if ( $is_connected && class_exists( 'Responsive_Add_Ons_Settings' ) ) {
+				$user  = Responsive_Add_Ons_Settings::get_instance();
+				$email = esc_html( $user->get_email() );
+				$plan  = esc_html( ucwords( $user->get_plan() ) );
+			}
+		}
+		$responsivepro_path = 'responsivepro/responsivepro.php';
+
+		$is_responsivepro_active = is_plugin_active( $responsivepro_path );
+
+
+		$rst_path = 'responsive-add-ons/responsive-add-ons.php';
+
+		$rst_nonce = add_query_arg(
+			array(
+				'action'        => 'activate',
+				'plugin'        => rawurlencode( $rst_path ),
+				'plugin_status' => 'all',
+				'paged'         => '1',
+				'_wpnonce'      => wp_create_nonce( 'activate-plugin_' . $rst_path ),
+			),
+			network_admin_url( 'plugins.php' )
+		);
+
+		$rbea_path = 'responsive-block-editor-addons/responsive-block-editor-addons.php';
+
+		$rbea_nonce = add_query_arg(
+			array(
+				'action'        => 'activate',
+				'plugin'        => rawurlencode( $rbea_path ),
+				'plugin_status' => 'all',
+				'paged'         => '1',
+				'_wpnonce'      => wp_create_nonce( 'activate-plugin_' . $rbea_path ),
+			),
+			network_admin_url( 'plugins.php' )
+		);
+
+		$theme_slug = 'responsive';
+
+		$responsive_nonce = add_query_arg(
+			array(
+				'action'   => 'activate',
+				'stylesheet' => rawurlencode( $theme_slug ),
+				'_wpnonce' => wp_create_nonce( 'switch-theme_' . $theme_slug ),
+			),
+			admin_url( 'themes.php' )
+		);
+
+		wp_localize_script(
+			'responsive-addons-for-elementor-admin-jsfile',
+			'localize',
+			array(
+				'ajaxurl'               => admin_url( 'admin-ajax.php' ),
+				'raelurl'               => RAEL_URL,
+				'siteurl'               => site_url(),
+				'themebuilderurl'       => admin_url( 'edit.php?post_type=rael-theme-template' ),
+				'isRSTActivated'        => is_plugin_active( $rst_path ),
+				'nonce'                 => wp_create_nonce( 'responsive-addons-for-elementor' ),
+				'rael_version'          => RAEL_VER,
+				'pageurl'               => admin_url( 'post-new.php?post_type=page' ),
+				'rael_widgets'          => get_option( 'rael_widgets' ),
+				'rst_status'            => $this->rael_plugin_status( $rst_path ),
+				'rbea_status'           => $this->rael_plugin_status( $rbea_path ),
+				'responsive_status'     => $this->rael_get_responsive_theme_status(),
+				'rst_nonce'             => $rst_nonce,
+				'rbea_nonce'            => $rbea_nonce,
+				'responsive_nonce'      => $responsive_nonce,
+				'rst_redirect'          => admin_url( 'admin.php?page=responsive_add_ons' ),
+				'rae_redirect'          => admin_url( 'admin.php?page=rael_getting_started' ),
+				'responsive_redirect'   => admin_url( 'admin.php?page=responsive' ),
+				'review_link'           => esc_url( 'https://wordpress.org/support/plugin/responsive-addons-for-elementor/reviews/#new-post' ),
+				'selected_posttype'     => get_option( 'rael_duplicator_allowed_post_types', array( 'all' ) ),
+				'all_cpts'              => $this->rael_get_all_cpts(),
+				'mailchimp_api_key'     => get_option( 'rael_mailchimp_settings_api_key', '' ),
+				'google_map_api_key'    => get_option( 'rael_google_map_settings_api_key', '' ),
+				'google_map_language'   => get_option( 'rael_google_map_settings_localization_language', '' ),
+				'google_map_local_lang' => $this->rael_google_map_local_lang(),
+				'recaptcha_site_key'    => get_option( 'rael_login_reg_setting_site_key', '' ),
+				'recaptcha_secret_key'  => get_option( 'rael_login_reg_setting_secret_key', '' ),
+				'plan_details'			=> $plan_details,
+				'userEmail'				=> $email,
+				'isResponsiveXActivated'=> $is_responsivepro_active,
+			)
+		);
+
+		add_filter( 'admin_footer_text', '__return_false' );
+		wp_enqueue_script( 'rael-rst-admin', RAEL_URL . '/admin/js/rael-rst-plugin-install.js', array( 'jquery' ), true, RAEL_VER );
+		wp_enqueue_script( 'updates' );
+		wp_localize_script(
+			'rael-rst-admin',
+			'rstPluginInstall',
+			array(
+				'installing'            => esc_html__( 'Installing ', 'responsive-addons-for-elementor' ),
+				'activating'            => esc_html__( 'Activating ', 'responsive-addons-for-elementor' ),
+				'verify_network'        => esc_html__( 'Not connect. Verify Network.', 'responsive-addons-for-elementor' ),
+				'page_not_found'        => esc_html__( 'Requested page not found. [404]', 'responsive-addons-for-elementor' ),
+				'internal_server_error' => esc_html__( 'Internal Server Error [500]', 'responsive-addons-for-elementor' ),
+				'json_parse_failed'     => esc_html__( 'Requested JSON parse failed', 'responsive-addons-for-elementor' ),
+				'timeout_error'         => esc_html__( 'Time out error', 'responsive-addons-for-elementor' ),
+				'ajax_req_aborted'      => esc_html__( 'Ajax request aborted', 'responsive-addons-for-elementor' ),
+				'uncaught_error'        => esc_html__( 'Uncaught Error', 'responsive-addons-for-elementor' ),
+			)
+		);
+
+		remove_filter( 'update_footer', 'core_update_footer' );
+	}
+
+	/**
+	 * Register the menu for the plugin.
+	 *
+	 * @return void [description]
+	 */
+	public function responsive_addons_for_elementor_admin_menu() {
+
+		$theme = wp_get_theme();
+
+		if ( ( 'Responsive' !== $theme->name && 'Responsive' !== $theme->parent_theme ) && is_plugin_inactive( 'responsive-block-editor-addons/responsive-block-editor-addons.php' ) ) {
+			add_menu_page(
+				'Responsive',
+				'Responsive',
+				'manage_options',
+				'rael_getting_started',
+				array( $this, 'responsive_addons_for_elementor_getting_started' ),
+				esc_url( RAEL_URL ) . 'admin/images/responsive-add-ons-menu-icon.png',
+				59
+			);
+			$parent_slug = 'rael_getting_started';
+			do_action( 'responsive_register_admin_menu', $parent_slug );
+		}
+
+		if ( ( 'Responsive' === $theme->name || 'Responsive' === $theme->parent_theme ) && version_compare( RESPONSIVE_THEME_VERSION, '4.9.7.1', '<=' ) ) {
+			add_menu_page(
+				__( 'REA', 'responsive-addons-for-elementor' ),
+				__( 'REA', 'responsive-addons-for-elementor' ),
+				'manage_options',
+				'rea_getting_started',
+				array( $this, 'responsive_addons_for_elementor_getting_started' ),
+				'dashicons-chart-area',
+				26
+			);
+
+			add_submenu_page(
+				'rea_getting_started',
+				__( 'Getting Started', 'responsive-addons-for-elementor' ),
+				__( 'Getting Started', 'responsive-addons-for-elementor' ),
+				'manage_options',
+				'rea_getting_started',
+				array( $this, 'responsive_addons_for_elementor_getting_started' ),
+				10
+			);
+
+			add_submenu_page(
+				'rea_getting_started',
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				'edit_pages',
+				'edit.php?post_type=rea-theme-template'
+			);
+
+			add_submenu_page(
+				'rea_getting_started',
+				__( 'REA Settings', 'responsive-addons-for-elementor' ),
+				__( 'Settings', 'responsive-addons-for-elementor' ),
+				'manage_options',
+				'rea_getting_started#settings',
+				array( $this, 'display_rea_admin_settings' ),
+				20
+			);
+		}
+	}
+
+	/**
+	 * Display Getting Started Page.
+	 *
+	 * Output the content for the getting started page.
+	 *
+	 * @access public
+	 */
+	public function responsive_addons_for_elementor_getting_started() {
+		if ( ! class_exists( 'Elementor\Plugin' ) ) {
+			$this->admin_notice_missing_main_plugin();
+		}
+		echo '<div id="rael-getting-started-page-app"></div>';
+	}
+
+	/**
+	 * On admin init.
+	 *
+	 * Preform actions on WordPress admin initialization.
+	 *
+	 * Fired by `admin_init` action.
+	 *
+	 * @access public
+	 */
+	public function responsive_addons_for_elementor_admin_init() {
+
+		$this->responsive_addons_for_elementor_remove_all_admin_notices();
+	}
+
+	/**
+	 * [responsive_addons_for_elementor_remove_all_admin_notices description]
+	 */
+	private function responsive_addons_for_elementor_remove_all_admin_notices() {
+		$responsive_addons_for_elementor_pages = array(
+			'responsive_addons_for_elementor',
+			'rael_getting_started',
+		);
+
+		if ( empty( $_GET['page'] ) || ! in_array( $_GET['page'], $responsive_addons_for_elementor_pages, true ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		remove_all_actions( 'admin_notices' );
+	}
+
+	/**
+	 * Responsive_addons_for_elementor_maybe_redirect_to_getting_started description
+	 *
+	 * @return [type] [description]
+	 */
+	public function responsive_addons_for_elementor_maybe_redirect_to_getting_started() {
+		if ( ! get_transient( 'responsive_addons_for_elementor_activation_redirect' ) ) {
+			return;
+		}
+
+		if ( wp_doing_ajax() ) {
+			return;
+		}
+
+		delete_transient( 'responsive_addons_for_elementor_activation_redirect' );
+
+		if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=rael_getting_started' ) );
+
+		exit;
+	}
+
+	/**
+	 * Ajax Request to Toggle RAEL Widgets.
+	 *
+	 * @since 1.0.0
+	 */
+	public function rael_widgets_toggle() {
+
+		check_ajax_referer( 'responsive-addons-for-elementor', '_nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Unauthorized', 'responsive-addons-for-elementor' ),
+				)
+			);	
+		}
+
+		// Pre-sanitizing the response using a custom function to ensure all values are cleaned.
+		// PHPCS incorrectly flags this as unsanitized, so the warning is suppressed.
+		// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		$rael_widgets = $this->recursive_sanitize_text_field( json_decode( stripslashes( wp_unslash( $_POST['value'] ) ), true ) );
+		// phpcs:enable
+
+		update_option( 'rael_widgets', $rael_widgets );
+
+		$this->update_frontend_assets( $rael_widgets );
+	}
+
+	/**
+	 * Recursively sanitize the response fields from $_POST.
+	 *
+	 * @return mixed
+	 */
+	public function recursive_sanitize_text_field($array) {
+		foreach ( $array as $key => &$value ) {
+			if ( is_array( $value ) ) {
+				$value = $this->recursive_sanitize_text_field($value);
+			}
+			else {
+				$value = sanitize_text_field( wp_unslash( $value ) );
+			}
+		}
+		return $array;
+	}
+
+	/**
+	 * Updates the frontend asset files when widgets are toggled.
+	 *
+	 * @param array $rael_widgets RAEL Widgets fetched from Database.
+	 * @param bool  $extend Checks toogle on/off status.
+	 * @since 1.0.0
+	 */
+	public function update_frontend_assets( $rael_widgets, $extend = false ) {
+
+		$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+
+		$js_files    = array();
+		$css_files   = array();
+		$included_js = array();
+
+		$js_files_path  = RAEL_DIR . 'assets/dist/js/frontend/';
+		$css_files_path = RAEL_DIR . 'assets/dist/css/frontend/';
+
+		$target_js_file_path  = RAEL_DIR . 'assets/dist/js/frontend/rael-frontend.min.js';
+		$target_css_file_path = RAEL_DIR . 'assets/dist/css/frontend/rael-frontend.min.css';
+
+		$ext         = '.min.js';
+		$css_min_ext = '.min.css';
+
+		foreach ( $rael_widgets as $rael_widget ) {
+			if ( $rael_widget['status'] ) {
+				switch ( $rael_widget['title'] ) {
+					case 'audio':
+						array_push( $css_files, $css_files_path . 'audio/rael-audio' . $css_min_ext );
+						break;
+					case 'back-to-top':
+						array_push( $js_files, $js_files_path . 'back-to-top/rael-back-to-top' . $ext );
+						array_push( $css_files, $css_files_path . 'back-to-top/rael-back-to-top' . $css_min_ext );
+						break;
+					case 'banner':
+						array_push( $js_files, $js_files_path . 'banner/rael-banner' . $ext );
+						array_push( $css_files, $css_files_path . 'banner/rael-banner' . $css_min_ext );
+						break;
+					case 'business-hour':
+						array_push( $css_files, $css_files_path . 'business-hour/rael-business-hour' . $css_min_ext );
+						break;
+					case 'button':
+						array_push( $css_files, $css_files_path . 'button/rael-button' . $css_min_ext );
+						break;
+					case 'call-to-action':
+						array_push( $css_files, $css_files_path . 'call-to-action/rael-cta-frontend' . $css_min_ext );
+						break;
+					case 'content-switcher':
+						array_push( $js_files, $js_files_path . 'content-switcher/rael-content-switcher' . $ext );
+						array_push( $css_files, $css_files_path . 'content-switcher/rael-content-switcher' . $css_min_ext );
+						break;
+					case 'countdown':
+						array_push( $js_files, $js_files_path . 'countdown/rael-countdown' . $ext );
+						array_push( $css_files, $css_files_path . 'countdown/rael-countdown-frontend' . $css_min_ext );
+						break;
+					case 'divider':
+						array_push( $css_files, $css_files_path . 'divider/rael-divider' . $css_min_ext );
+						break;
+					case 'dual-color-header':
+						array_push( $css_files, $css_files_path . 'dual-color-header/rael-dual-color-header' . $css_min_ext );
+						break;
+					case 'fancy-text':
+						array_push( $js_files, $js_files_path . 'fancy-text/rael-fancy-text' . $ext );
+						array_push( $css_files, $css_files_path . 'fancy-text/rael-fancy-text' . $css_min_ext );
+						break;
+					case 'faq':
+						array_push( $js_files, $js_files_path . 'faq/rael-faq' . $ext );
+						array_push( $css_files, $css_files_path . 'faq/rael-faq' . $css_min_ext );
+						break;
+					case 'feature-list':
+						array_push( $css_files, $css_files_path . 'feature-list/rael-feature-list' . $css_min_ext );
+						break;
+					case 'flip-box':
+						array_push( $css_files, $css_files_path . 'flipbox/rael-flipbox' . $css_min_ext );
+						break;
+					case 'icon-box':
+						array_push( $css_files, $css_files_path . 'infobox/rael-infobox' . $css_min_ext );
+						break;
+					case 'image-gallery':
+						array_push( $js_files, $js_files_path . 'image-gallery/rael-image-gallery' . $ext );
+						array_push( $css_files, $css_files_path . 'image-gallery/rael-image-gallery' . $css_min_ext );
+						break;
+					case 'image-hotspot':
+						array_push( $css_files, $css_files_path . 'image-hotspot/rael-image-hotspot' . $css_min_ext );
+						break;
+					case 'mc-styler':
+						array_push( $js_files, $js_files_path . 'mailchimp/rael-mailchimp' . $ext );
+						array_push( $css_files, $css_files_path . 'mcstyler/rael-mcstyler' . $css_min_ext );
+						break;
+					case 'multi-button':
+						array_push( $css_files, $css_files_path . 'multi-button/rael-multi-button' . $css_min_ext );
+						break;
+					case 'progress-bar':
+						array_push( $js_files, $js_files_path . 'progress-bar/rael-progress-bar' . $ext );
+						array_push( $css_files, $css_files_path . 'progress-bar/rael-progress-bar' . $css_min_ext );
+						break;
+					case 'reviews':
+						if ( ! in_array( $js_files_path . 'testimonial/rael-testimonial' . $ext, $js_files, true ) ) {
+							array_push( $included_js, $js_files_path . 'testimonial/rael-testimonial' . $ext );
+							array_push( $js_files, $js_files_path . 'testimonial/rael-testimonial' . $ext );
+						}
+						array_push( $css_files, $css_files_path . 'reviews/rael-reviews' . $css_min_ext );
+						break;
+					case 'search-form':
+						array_push( $js_files, $js_files_path . 'search-form/rael-search-form' . $ext );
+						array_push( $css_files, $css_files_path . 'search-form/rael-search-form' . $css_min_ext );
+						break;
+					case 'slider':
+						array_push( $js_files, $js_files_path . 'rael-slider/rael-slider' . $ext );
+						array_push( $css_files, $css_files_path . 'slider/rael-slider' . $css_min_ext );
+						break;
+					case 'timeline':
+						array_push( $js_files, $js_files_path . 'timeline/rael-timeline' . $ext );
+						array_push( $css_files, $css_files_path . 'timeline/rael-timeline' . $css_min_ext );
+						break;
+					case 'wpf-styler':
+						array_push( $css_files, $css_files_path . 'wpfstyler/rael-wpfstyler' . $css_min_ext );
+						break;
+					case 'sticky-video':
+						array_push( $css_files, $css_files_path . 'sticky-video/rael-sticky-video' . $css_min_ext );
+						break;
+					case 'table-of-contents':
+						array_push( $js_files, $js_files_path . 'table-of-contents/rael-table-of-contents' . $ext );
+						array_push( $css_files, $css_files_path . 'table-of-contents/rael-table-of-contents' . $css_min_ext );
+						break;
+					case 'team-member':
+						array_push( $js_files, $js_files_path . 'team-member/rael-team-member' . $ext );
+						array_push( $css_files, $css_files_path . 'team-member/rael-team-member' . $css_min_ext );
+						break;
+					case 'testimonial-slider':
+						if ( ! in_array( $js_files_path . 'testimonial/rael-testimonial' . $ext, $js_files, true ) ) {
+							array_push( $included_js, $js_files_path . 'testimonial/rael-testimonial' . $ext );
+							array_push( $js_files, $js_files_path . 'testimonial/rael-testimonial' . $ext );
+						}
+						array_push( $css_files, $css_files_path . 'testimonial-slider/rael-testimonial-slider' . $css_min_ext );
+
+						array_push( $css_files, $css_files_path . 'media-carousel/rael-media-carousel' . $css_min_ext );
+						break;
+					case 'twitter-feed':
+						array_push( $js_files, $js_files_path . 'twitter-feed/rael-twitter-feed' . $ext );
+						array_push( $css_files, $css_files_path . 'twitter-feed/rael-twitter-feed' . $css_min_ext );
+						break;
+					case 'video':
+						array_push( $js_files, $js_files_path . 'video/rael-video' . $ext );
+						array_push( $css_files, $css_files_path . 'video/rael-video' . $css_min_ext );
+						break;
+					case 'one-page-navigation':
+						array_push( $js_files, $js_files_path . 'one-page-navigation/rael-one-page-navigation' . $ext );
+						array_push( $css_files, $css_files_path . 'one-page-navigation/rael-one-page-navigation' . $css_min_ext );
+						break;
+					case 'logo-carousel':
+						array_push( $js_files, $js_files_path . 'logo-carousel/rael-logo-carousel' . $ext );
+						array_push( $css_files, $css_files_path . 'logo-carousel/rael-logo-carousel' . $css_min_ext );
+						break;
+					case 'data-table':
+						array_push( $js_files, $js_files_path . 'data-table/rael-data-table' . $ext );
+						array_push( $css_files, $css_files_path . 'data-table/rael-data-table' . $css_min_ext );
+						break;
+					case 'content-ticker':
+						array_push( $js_files, $js_files_path . 'content-ticker/rael-content-ticker' . $ext );
+						array_push( $css_files, $css_files_path . 'content-ticker/rael-content-ticker' . $css_min_ext );
+						break;
+					case 'cf-styler':
+						array_push( $css_files, $css_files_path . 'cf7/rael-cf7styler' . $css_min_ext );
+						break;
+					case 'advanced-tabs':
+						array_push( $js_files, $js_files_path . 'advanced-tabs/rael-advanced-tabs' . $ext );
+						array_push( $css_files, $css_files_path . 'advanced-tabs/rael-advanced-tabs' . $css_min_ext );
+						break;
+					case 'pricing-table':
+						array_push( $css_files, $css_files_path . 'pricing-table/rael-pricing-table-frontend' . $css_min_ext );
+						break;
+					case 'price-list':
+						array_push( $css_files, $css_files_path . 'price-list/rael-price-list-frontend' . $css_min_ext );
+						break;
+					case 'posts':
+						array_push( $css_files, $css_files_path . 'posts/rael-posts' . $css_min_ext );
+						break;
+					case 'price-box':
+						array_push( $js_files, $js_files_path . 'price-box/rael-price-box' . $ext );
+						array_push( $css_files, $css_files_path . 'price-box/rael-price-box' . $css_min_ext );
+						break;
+					case 'post-carousel':
+						array_push( $js_files, $js_files_path . 'post-carousel/rael-post-carousel' . $ext );
+						array_push( $css_files, $css_files_path . 'post-carousel/rael-post-carousel' . $css_min_ext );
+						break;
+					case 'offcanvas':
+						array_push( $js_files, $js_files_path . 'offcanvas/rael-offcanvas' . $ext );
+						array_push( $css_files, $css_files_path . 'offcanvas/rael-offcanvas' . $css_min_ext );
+						break;
+					case 'nav-menu':
+						array_push( $js_files, $js_files_path . 'nav-menu/rael-nav-menu' . $ext );
+						array_push( $css_files, $css_files_path . 'nav-menu/rael-nav-menu' . $css_min_ext );
+						array_push( $css_files, $css_files_path . 'nav-menu/rael-pointer' . $css_min_ext );
+						break;
+					case 'login-register':
+						array_push( $js_files, $js_files_path . 'login-register/rael-login-register' . $ext );
+						array_push( $css_files, $css_files_path . 'login-register/rael-login-register' . $css_min_ext );
+						break;
+					case 'google-map':
+						array_push( $js_files, $js_files_path . 'google-map/rael-google-map' . $ext );
+						array_push( $css_files, $css_files_path . 'google-map/rael-google-map' . $css_min_ext );
+						break;
+					case 'lottie':
+						array_push( $js_files, $js_files_path . 'lottie/rael-lottie' . $ext );
+						array_push( $css_files, $css_files_path . 'lottie/rael-lottie' . $css_min_ext );
+						break;
+					case 'woo-products':
+						if ( ! in_array( $js_files_path . 'product-carousel/rael-quick-view' . $ext, $js_files, true ) ) {
+							array_push( $included_js, $js_files_path . 'product-carousel/rael-quick-view' . $ext );
+							array_push( $js_files, $js_files_path . 'product-carousel/rael-quick-view' . $ext );
+						}
+						array_push( $js_files, $js_files_path . 'products/rael-products' . $ext );
+						array_push( $js_files, $js_files_path . 'products/rael-loadmore' . $ext );
+						array_push( $css_files, $css_files_path . 'products/rael-products' . $css_min_ext );
+						array_push( $css_files, $css_files_path . 'products/rael-loadmore' . $css_min_ext );
+						break;
+					case 'wc-add-to-cart':
+						array_push( $css_files, $css_files_path . 'add-to-cart/rael-add-to-cart-frontend' . $css_min_ext );
+						break;
+					case 'product-category-grid':
+						array_push( $css_files, $css_files_path . 'product-category-grid/rael-product-category-grid' . $css_min_ext );
+						break;
+					case 'product-carousel':
+						if ( ! in_array( $js_files_path . 'product-carousel/rael-quick-view' . $ext, $js_files, true ) ) {
+							array_push( $included_js, $js_files_path . 'product-carousel/rael-quick-view' . $ext );
+							array_push( $css_files, $css_files_path . 'quick-view/rael-quick-view' . $css_min_ext );
+							array_push( $js_files, $js_files_path . 'product-carousel/rael-quick-view' . $ext );
+						}
+						array_push( $css_files, $css_files_path . 'quick-view/rael-quick-view' . $css_min_ext );
+						array_push( $js_files, $js_files_path . 'product-carousel/rael-product-carousel' . $ext );
+						array_push( $css_files, $css_files_path . 'product-carousel/rael-product-carousel' . $css_min_ext );
+						break;
+					case 'woo-checkout':
+						array_push( $js_files, $js_files_path . 'woo-checkout/rael-woo-checkout-main' . $ext );
+						array_push( $js_files, $js_files_path . 'woo-checkout/rael-woo-checkout' . $ext );
+						array_push( $css_files, $css_files_path . 'woo-checkout/rael-woo-checkout' . $css_min_ext );
+						break;
+					case 'portfolio':
+						array_push( $js_files, $js_files_path . 'portfolio/rael-portfolio' . $ext );
+						array_push( $css_files, $css_files_path . 'portfolio/rael-portfolio-frontend' . $css_min_ext );
+						break;
+					case 'menu-cart':
+						array_push( $js_files, $js_files_path . 'menu-cart/rael-menu-cart' . $ext );
+						array_push( $css_files, $css_files_path . 'wc-menu-cart/rael-wc-menu-cart-frontend' . $css_min_ext );
+						break;
+					case 'modal-popup':
+						array_push( $js_files, $js_files_path . 'modal-popup/rael-modal-popup' . $ext );
+						array_push( $css_files, $css_files_path . 'modal-popup/rael-modal-popup' . $css_min_ext );
+						break;
+					case 'gf-styler':
+						array_push( $css_files, $css_files_path . 'gfstyler/rael-gfstyler' . $css_min_ext );
+						break;
+					case 'facebook-feed':
+						array_push( $js_files, $js_files_path . 'facebook-feed/rael-facebook-feed' . $ext );
+						array_push( $css_files, $css_files_path . 'facebook-feed/rael-facebook-feed' . $css_min_ext );
+						break;
+					case 'before-after-slider':
+						array_push( $js_files, $js_files_path . 'before-after-slider/rael-before-after-slider' . $ext );
+						array_push( $css_files, $css_files_path . 'before-after-slider/rael-before-after-slider' . $css_min_ext );
+						break;
+					case 'stacking-cards':
+						array_push( $css_files, $css_files_path . 'stacking-cards/rael-stacking-cards' . $css_min_ext );
+						break;
+				}
+			}
+		}
+		// Theme Builder & Module CSS.
+		$theme_builder_widget_css = array(
+			'theme-post-info/rael-theme-post-info',
+			'theme-author-box/rael-theme-author-box',
+			'theme-post-navigation/rael-theme-post-navigation',
+			'product-meta/rael-product-meta',
+			'product-archive/rael-product-archive',
+			'theme-archive-posts/rael-theme-archive-posts',
+			'theme-builder/rael-style',
+		);
+
+		foreach ( $theme_builder_widget_css as $file_name ) {
+			$css_files[] = $css_files_path . $file_name . $css_min_ext;
+		}
+
+		$js_success  = $this->write_frontend_file( $js_files, $target_js_file_path );
+		$css_success = $this->write_frontend_file( $css_files, $target_css_file_path );
+
+		if ( $js_success && $css_success ) {
+			if ( true === $extend ) {
+				return true;
+			}
+			wp_send_json_success();
+		} else {
+			if ( true === $extend ) {
+				return false;
+			}
+			wp_send_json_error();
+		}
+	}
+
+	/**
+	 * Writes the JS & CSS content of user allowed widgets
+	 *
+	 * @param array  $asset_files      Array of widgets js files.
+	 * @param string $target_file_path File path of frontend.
+	 * @since 1.0.0
+	 */
+	public function write_frontend_file( $asset_files, $target_file_path ) {
+
+		global $wp_filesystem;
+		WP_Filesystem();
+
+		$combined_content = ''; // Initialize an empty string to store combined content.
+
+		foreach ( $asset_files as $file ) {
+			$content           = $wp_filesystem->get_contents( $file );
+			$combined_content .= $content; // Append content from each asset file.
+		}
+
+		// Write the combined content to the target file.
+		$wp_filesystem->put_contents( $target_file_path, $combined_content, FILE_APPEND );
+
+		// Set permissions after writing combined content.
+		$wp_filesystem->chmod( $target_file_path, 0666 );
+
+		return true;
+	}
+	/**
+	 * Callback function to display admin notice.
+	 */
+	public function rael_theme_builder_notice_callback() {}
+
+
+	/**
+	 * RAEL Register Admin Menu.
+	 *
+	 * @param string $slug parent slug of submenu.
+	 * @since 2.0.2
+	 */
+	public function rael_register_admin_menu( $slug ) {
+
+		add_submenu_page(
+			$slug,
+			__( 'Responsive Elementor Add-Ons', 'responsive-addons-for-elementor' ),
+			__( 'Elementor Add-Ons', 'responsive-addons-for-elementor' ),
+			'manage_options',
+			'rael_getting_started',
+			array( $this, 'responsive_addons_for_elementor_getting_started' ),
+			10
+		);
+
+		if ( class_exists( 'Elementor\Plugin' ) ) {
+			// Elementor is activated, add the submenu for the theme builder
+			add_submenu_page(
+				$slug,
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				'edit_pages',
+				'edit.php?post_type=rael-theme-template'
+			);
+		} else {
+			// Elementor is not activated, add submenu item with admin notice.
+			add_submenu_page(
+				$slug,
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				__( 'Theme Builder', 'responsive-addons-for-elementor' ),
+				'manage_options',
+				'rael_theme_builder_notice',
+				array( $this, 'rael_theme_builder_notice_callback' )
+			);
+		}
+	}
+
+	/**
+	 * Add Icon for Theme Builder under Elementor Addons Submenu.
+	 *
+	 * @since 2.0.2
+	 */
+	public function responsive_addons_for_elementor_responsive_menu() {
+		wp_enqueue_style( 'responsive_addons_for_elementor_responsive_menu-style', RAEL_URL . 'admin/css/rael-responsive-menu.css', array(), RAEL_VER );
+		wp_enqueue_script( 'responsive_addons_for_elementor_responsive_menu', RAEL_URL . 'admin/js/rael-responsive-menu.js', array( 'jquery' ), RAEL_VER, true );
+	}
+
+	/**
+	 * Mailchip Subscribe.
+	 */
+	public function mailchimp_subscribe_with_ajax() {
+		// Verify the nonce before doing anything else to block unauthenticated/CSRF requests.
+		check_ajax_referer( 'rael_mailchimp_subscribe_nonce', 'security' );
+
+		if ( ! isset( $_POST['fields'] ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Missing
+			return;
+		}
+
+		$api_key = get_option( 'rael_mailchimp_settings_api_key' );
+		$list_id = isset( $_POST['listId'] ) ? sanitize_text_field( wp_unslash( $_POST['listId'] ) ) : '';
+
+		if ( empty( $api_key ) ) {
+			wp_send_json_error( array( 'message' => 'Mailchimp API key is not configured.' ) );
+		}
+
+		$datacenter = substr( $api_key, strpos( $api_key, '-' ) + 1 );
+		if ( ! preg_match( '/^[a-z]{2,3}\d+$/', $datacenter ) ) {
+			wp_send_json_error( array( 'message' => 'Invalid Mailchimp API key.' ) );
+		}
+
+		parse_str( $_POST['fields'], $settings ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing
+
+		$merge_fields = array(
+			'FNAME' => ! empty( $settings['rael_mailchimp_firstname'] ) ? sanitize_text_field( $settings['rael_mailchimp_firstname'] ) : '',
+			'LNAME' => ! empty( $settings['rael_mailchimp_lastname'] ) ? sanitize_text_field( $settings['rael_mailchimp_lastname'] ) : '',
+		);
+
+		$url = 'https://' . $datacenter . '.api.mailchimp.com/3.0/lists/' . $list_id . '/members/' . md5( strtolower( $settings['rael_mailchimp_email'] ) );
+
+		$response = wp_remote_post(
+			esc_url_raw( $url ),
+			array(
+				'method'  => 'PUT',
+				'headers' => array(
+					'Content-Type'  => 'application/json',
+					'Authorization' => 'Basic ' . base64_encode( 'user:' . $api_key ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+				),
+				'body'    => wp_json_encode(
+					array( // phpcs:ignore WordPress.WP.AlternativeFunctions.json_encode_json_encode
+					'email_address' => sanitize_email( $settings['rael_mailchimp_email'] ),
+					'status'        => 'subscribed',
+					'merge_fields'  => $merge_fields,
+					)
+				),
+			)
+		);
+
+		if ( ! is_wp_error( $response ) ) {
+			$response = json_decode( wp_remote_retrieve_body( $response ) );
+
+			if ( ! empty( $response ) ) {
+				if ( 'subscribed' === $response->status ) {
+					wp_send_json(
+						array(
+							'status' => 'subscribed',
+						)
+					);
+				} else {
+					wp_send_json(
+						array(
+							'status' => $response->title,
+						)
+					);
+				}
+			}
+		}
+		die();
+	}
+
+	/**
+	 * Enqueue Scripts
+	 *
+	 * Enqueues the necessary scripts and styles for the plugin's admin interface.
+	 */
+	public function enqueue_scripts() {
+		wp_enqueue_script( 'rael-select2', RAEL_URL . 'admin/assets/lib/select2/select2.js', array( 'jquery' ), RAEL_VER, true );
+
+		// Select2 i18n.
+		$wp_local_lang = get_locale();
+
+		if ( '' !== $wp_local_lang ) {
+			$select2_available_lang = array(
+				''               => 'en',
+				'hi_IN'          => 'hi',
+				'mr'             => 'mr',
+				'af'             => 'af',
+				'ar'             => 'ar',
+				'ary'            => 'ar',
+				'as'             => 'as',
+				'azb'            => 'az',
+				'az'             => 'az',
+				'bel'            => 'be',
+				'bg_BG'          => 'bg',
+				'bn_BD'          => 'bn',
+				'bo'             => 'bo',
+				'bs_BA'          => 'bs',
+				'ca'             => 'ca',
+				'ceb'            => 'ceb',
+				'cs_CZ'          => 'cs',
+				'cy'             => 'cy',
+				'da_DK'          => 'da',
+				'de_CH'          => 'de',
+				'de_DE'          => 'de',
+				'de_DE_formal'   => 'de',
+				'de_CH_informal' => 'de',
+				'dzo'            => 'dz',
+				'el'             => 'el',
+				'en_CA'          => 'en',
+				'en_GB'          => 'en',
+				'en_AU'          => 'en',
+				'en_NZ'          => 'en',
+				'en_ZA'          => 'en',
+				'eo'             => 'eo',
+				'es_MX'          => 'es',
+				'es_VE'          => 'es',
+				'es_CR'          => 'es',
+				'es_CO'          => 'es',
+				'es_GT'          => 'es',
+				'es_ES'          => 'es',
+				'es_CL'          => 'es',
+				'es_PE'          => 'es',
+				'es_AR'          => 'es',
+				'et'             => 'et',
+				'eu'             => 'eu',
+				'fa_IR'          => 'fa',
+				'fi'             => 'fi',
+				'fr_BE'          => 'fr',
+				'fr_FR'          => 'fr',
+				'fr_CA'          => 'fr',
+				'gd'             => 'gd',
+				'gl_ES'          => 'gl',
+				'gu'             => 'gu',
+				'haz'            => 'haz',
+				'he_IL'          => 'he',
+				'hr'             => 'hr',
+				'hu_HU'          => 'hu',
+				'hy'             => 'hy',
+				'id_ID'          => 'id',
+				'is_IS'          => 'is',
+				'it_IT'          => 'it',
+				'ja'             => 'ja',
+				'jv_ID'          => 'jv',
+				'ka_GE'          => 'ka',
+				'kab'            => 'kab',
+				'km'             => 'km',
+				'ko_KR'          => 'ko',
+				'ckb'            => 'ku',
+				'lo'             => 'lo',
+				'lt_LT'          => 'lt',
+				'lv'             => 'lv',
+				'mk_MK'          => 'mk',
+				'ml_IN'          => 'ml',
+				'mn'             => 'mn',
+				'ms_MY'          => 'ms',
+				'my_MM'          => 'my',
+				'nb_NO'          => 'nb',
+				'ne_NP'          => 'ne',
+				'nl_NL'          => 'nl',
+				'nl_NL_formal'   => 'nl',
+				'nl_BE'          => 'nl',
+				'nn_NO'          => 'nn',
+				'oci'            => 'oc',
+				'pa_IN'          => 'pa',
+				'pl_PL'          => 'pl',
+				'ps'             => 'ps',
+				'pt_BR'          => 'pt',
+				'pt_PT_ao90'     => 'pt',
+				'pt_PT'          => 'pt',
+				'rhg'            => 'rhg',
+				'ro_RO'          => 'ro',
+				'ru_RU'          => 'ru',
+				'sah'            => 'sah',
+				'si_LK'          => 'si',
+				'sk_SK'          => 'sk',
+				'sl_SI'          => 'sl',
+				'sq'             => 'sq',
+				'sr_RS'          => 'sr',
+				'sv_SE'          => 'sv',
+				'szl'            => 'szl',
+				'ta_IN'          => 'ta',
+				'te'             => 'te',
+				'th'             => 'th',
+				'tl'             => 'tl',
+				'tr_TR'          => 'tr',
+				'tt_RU'          => 'tt',
+				'tah'            => 'ty',
+				'ug_CN'          => 'ug',
+				'uk'             => 'uk',
+				'ur'             => 'ur',
+				'uz_UZ'          => 'uz',
+				'vi'             => 'vi',
+				'zh_CN'          => 'zh',
+				'zh_TW'          => 'zh',
+				'zh_HK'          => 'zh',
+			);
+
+			if ( isset( $select2_available_lang[ $wp_local_lang ] ) && file_exists( RAEL_URL . 'admin/assets/lib/select2/i18n/' . $select2_available_lang[ $wp_local_lang ] . '.js' ) ) {
+				wp_enqueue_script(
+					'rael-select2-lang',
+					RAEL_URL . 'admin/assets/lib/select2/i18n/' . $select2_available_lang[ $wp_local_lang ] . '.js',
+					array( 'jquery', 'rael-select2' ),
+					RAEL_VER,
+					true
+				);
+			}
+		}
+
+		wp_register_style( 'rael-select2-style', RAEL_URL . 'admin/assets/lib/select2/select2.css', array(), RAEL_VER );
+		wp_enqueue_style( 'rael-select2-style' );
+	}
+
+	/**
+	 * Facebook Feed
+	 *
+	 * @param array $settings optional widget's settings.
+	 * @return false|string|void
+	 * @since 1.3.1
+	 */
+	public function rael_render_facebook_feed( $settings ) {
+
+		$page =0;
+		$html    = '';
+		$page_id = $settings['rael_facebook_feed_page_id'];
+		$token   = $settings['rael_facebook_feed_access_token'];
+		$offset = isset($settings['rael_facebook_feed_offset']) ? $settings['rael_facebook_feed_offset'] : 0;
+		if ( empty( $page_id ) || empty( $token ) ) {
+			return;
+		}
+
+		$key           = 'rael_facebook_feed_' . hash( 'sha256', str_replace( '.', '', $page_id . $token ) ) . $settings['rael_facebook_feed_cache_limit'];
+		$facebook_data = get_transient( $key );
+		
+		if ( false === $facebook_data ) {
+			$facebook_data = wp_remote_retrieve_body( wp_remote_get( "https://graph.facebook.com/v22.0/{$page_id}/posts?fields=id,message,story,created_time,full_picture,permalink_url,attachments{type,media_type,title,description,unshimmed_url},comments.summary(total_count){from},reactions.summary(total_count){from}&limit=99&access_token={$token}", array( 'timeout' => 70 ) ) );
+
+			$facebook_data = json_decode( $facebook_data, true );
+			if ( isset( $facebook_data['data'] ) ) {
+				set_transient( $key, $facebook_data, ( $settings['rael_facebook_feed_cache_limit'] * MINUTE_IN_SECONDS ) );
+			}
+		}
+
+		if ( ! isset( $facebook_data['data'] ) ) {
+			return;
+		}
+		$facebook_data = $facebook_data['data'];
+
+		switch ( $settings['rael_facebook_feed_sort_by'] ) {
+			case 'least-recent':
+				$facebook_data = array_reverse( $facebook_data );
+				break;
+		}
+		$limit = isset($settings['rael_facebook_feed_image_count']['size']) ? intval( $settings['rael_facebook_feed_image_count']['size'] ) : 0;
+
+		$items = array_slice( $facebook_data, $offset, $limit );
+
+		foreach ( $items as $item ) {
+			$max           = 'rael_facebook_feed_message_max_length';
+			$limit         = isset( $settings[ $max ] ) && isset( $settings[ $max ]['size'] ) ? $settings[ $max ]['size'] : null;
+			$message       = wp_trim_words( ( isset( $item['message'] ) ? $item['message'] : ( isset( $item['story'] ) ? $item['story'] : '' ) ), $limit, '...' );
+			$photo         = ( isset( $item['full_picture'] ) ? esc_url( $item['full_picture'] ) : '' );
+			$likes         = ( isset( $item['reactions'] ) ? $item['reactions']['summary']['total_count'] : 0 );
+			$post_comments = ( isset( $item['comments'] ) ? $item['comments']['summary']['total_count'] : 0 );
+
+			$fb_url = 'https://www.facebook.com/';
+			if ( 'card' === $settings['rael_facebook_feed_layout'] ) {
+				$html .= '<div class="rael-fb-feed-item">
+					<div class="rael-fb-feed-item-content-container">
+					<header class="rael-fb-feed-item-header">
+						<div class="rael-fb-feed-item-user">
+							' . ( isset( $item['from']['id'] ) ? '<a class="rael-fb-feed-user-image" href="' . $fb_url . $page_id . '" target="' . ( 'yes' === $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '"><img src="https://graph.facebook.com/v22.0/' . $page_id . '/picture" alt="' . ( isset( $item['from']['name'] ) ? esc_html( $item['from']['name'] ) : '' ) . '" class="rael-fb-feed-avatar"></a>' : '' ) . '
+							<a href="' . $fb_url . $page_id . '" target="' . ( 'yes' === $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '"><p class="rael-fb-feed-username">' . ( isset( $item['from']['name'] ) ? esc_html( $item['from']['name'] ) : '' ) . '</p></a>
+						</div>';
+
+				if ( $settings['rael_facebook_feed_date'] ) {
+					$html .= '<a href="' . $item['permalink_url'] . '" target="' . ( $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '" class="rael-fb-feed-post-time"><i class="far fa-clock" aria-hidden="true"></i> ' . gmdate( 'd M Y', strtotime( $item['created_time'] ) ) . '</a>';
+				}
+				$html .= '</header>';
+
+				if ( $settings['rael_facebook_feed_message'] && ! empty( $message ) ) {
+					$html .= '<div class="rael-fb-feed-item-content">
+								<p class="rael-fb-feed-message">' . esc_html( $message ) . '</p>
+							</div>';
+				}
+
+				if ( ! empty( $photo ) || isset( $item['attachments']['data'] ) ) {
+					$html .= '<div class="rael-fb-feed-media-wrap">';
+					if ( isset( $item['status_type'] ) && 'shared_story' === $item['status_type'] ) {
+						if ( isset( $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) {
+							$html .= '<a href="' . $item['permalink_url'] . '" target="' . ( 'yes' === $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '" class="rael-fb-feed-media-link">';
+							if ( 'video' === $item['attachments']['data'][0]['media_type'] ) {
+								$html .= '<img class="rael-fb-feed-content-image" src="' . $photo . '" />
+											<div class="rael-fb-feed-content-image-overlay"><i class="far fa-play-circle" aria-hidden="true"></i></div>';
+							} else {
+								$html .= '<img class="rael-fb-feed-content-image" src="' . $photo . '" />';
+							}
+							$html .= '</a>';
+						}
+
+						$html .= '<div class="rael-fb-feed-url-preview">';
+						if ( isset( $settings['rael_facebook_feed_is_show_preview_host'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_host'] ) {
+							$html .= '<p class="rael-fb-feed-url-host">' . wp_parse_url( $item['attachments']['data'][0]['unshimmed_url'] )['host'] . '</p>';
+						}
+						if ( isset( $settings['rael_facebook_feed_is_show_preview_title'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_title'] ) {
+							$html .= '<h2 class="rael-facebook-feed-url-title">' . $item['attachments']['data'][0]['title'] . '</h2>';
+						}
+
+						if ( isset( $settings['rael_facebook_feed_is_show_preview_description'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_description'] ) {
+							$html .= '<p class="rael-fb-feed-url-description">' . $item['attachments']['data'][0]['description'] . '</p>';
+						}
+						$html .= '</div>';
+					} elseif ( isset( $item['status_type'] ) && 'added_video' === $item['status_type'] ) {
+						if ( isset( $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) {
+							$html .= '<a href="' . $item['permalink_url'] . '" target="' . ( 'yes' === $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '" class="rael-fb-feed-preview-img">
+											<img class="rael-fb-feed-img" src="' . $photo . '">
+											<div class="rael-facebook-feed-preview-overlay"><i class="far fa-play-circle" aria-hidden="true"></i></div>
+										</a>';
+						}
+					} elseif ( isset( $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) {
+							$html .= '<a href="' . $item['permalink_url'] . '" target="' . ( 'yes' === $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '" class="rael-fb-feed-preview-img">
+											<img class="rael-fb-feed-img" src="' . $photo . '">
+										</a>';
+					}
+					$html .= '</div>';
+				}
+				if ( $settings['rael_facebook_feed_likes'] || $settings['rael_facebook_feed_comments'] ) {
+					$html .= '<footer class="rael-fb-feed-item-footer">';
+					if ( $settings['rael_facebook_feed_likes'] ) {
+						$html .= '<span class="rael-fb-feed-post-likes"><i class="far fa-thumbs-up" aria-hidden="true"></i> ' . $likes . '</span>';
+					}
+					if ( $settings['rael_facebook_feed_comments'] ) {
+						$html .= '<span class="rael-fb-feed-post-comments"><i class="far fa-comments" aria-hidden="true"></i> ' . $post_comments . '</span>';
+					}
+					$html .= '</footer>';
+				}
+				$html .= '</div></div>';
+			} else {
+				if ( isset( $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) && 'yes' === $settings['rael_facebook_feed_is_show_preview_thumbnail'] ) {
+					if ( empty( $photo ) ) {
+						if ( empty( $settings['rael_overlay_image']['url'] ) ) {
+							$photo_url = RAEL_ASSETS_URL . 'images/facebook-feed/abstract_leaves.png';
+						} else {
+							$photo_url = $settings['rael_overlay_image']['url'];
+						}
+					} else {
+						$photo_url = $photo;
+					}
+				} elseif ( empty( $settings['rael_overlay_image']['url'] ) ) {
+						$photo_url = RAEL_ASSETS_URL . 'images/facebook-feed/abstract_leaves.png';
+				} else {
+					$photo_url = $settings['rael_overlay_image']['url'];
+				}
+				$html .= '<a href="' . $item['permalink_url'] . '" target="' . ( $settings['rael_facebook_feed_link_target'] ? '_blank' : '_self' ) . '" class="rael-fb-feed-item">
+						<div class="rael-fb-feed-item-content-container hover-container">
+							<img class="rael-fb-feed-img" src="' . $photo_url . '">';
+
+				if ( $settings['rael_facebook_feed_likes'] || $settings['rael_facebook_feed_comments'] ) {
+					$html .= '<div class="rael-fb-feed-item-overlay hover-content">
+								<div class="rael-fb-feed-item-overlay-inner">';
+
+					if ( $settings['rael_facebook_feed_message'] && ! empty( $message ) ) {
+						$html .= '<div class="rael-fb-feed-item-content">
+													<div class="hover-user-content">
+														' . ( isset( $item['from']['name'] ) ? '<img src="https://graph.facebook.com/v22.0/' . $page_id . '/picture" alt="' . $item['from']['name'] . '" class="rael-fb-feed-avatar">' : '' ) . '
+														' . ( isset( $item['from']['name'] ) ? '<p class="rael-fb-feed-username">' . esc_html( $item['from']['name'] ) . '</p>' : '' ) . '
+													</div>
+													<p class="rael-fb-feed-message">' . esc_html( $message ) . '</p>
+												</div>';
+					}
+									$html .= '<div class="rael-fb-feed-meta">';
+					if ( $settings['rael_facebook_feed_likes'] ) {
+						$html .= '<span class="rael-fb-feed-post-likes"><i class="far fa-thumbs-up" aria-hidden="true"></i> ' . $likes . '</span>';
+					}
+					if ( $settings['rael_facebook_feed_comments'] ) {
+						$html .= '<span class="rael-fb-feed-post-comments"><i class="far fa-comments" aria-hidden="true"></i> ' . $post_comments . '</span>';
+					}
+									$html .= '</div>
+								</div>
+							</div>';
+				}
+				$html .= '</div></a>';
+			}
+		}
+
+
+		echo wp_kses_post( $html );
+	}
+
+	/**
+	 * Return widget settings.
+	 *
+	 * @param integer $page_id    Page ID.
+	 * @param string  $widget_id  Widget ID.
+	 *
+	 * @access public
+	 */
+	public function rael_get_widget_settings( $page_id, $widget_id ) {
+		$document = Plugin::$instance->documents->get( $page_id );
+		$settings = array();
+		if ( $document ) {
+			$elements    = $document->get_elements_data();
+			$widget_data = self::find_element_recursive( $elements, $widget_id );
+
+			if ( ! empty( $widget_data ) ) {
+				$widget = Plugin::instance()->elements_manager->create_element_instance( $widget_data );
+				if ( $widget ) {
+					$settings = $widget->get_settings_for_display();
+				}
+			}
+		}
+		return $settings;
+	}
+
+	/**
+	 * Get Widget data.
+	 *
+	 * @param array  $elements Element array.
+	 * @param string $form_id  Element ID.
+	 *
+	 * @return bool|array
+	 */
+	public function find_element_recursive( $elements, $form_id ) {
+		foreach ( $elements as $element ) {
+			if ( $form_id === $element['id'] ) {
+				return $element;
+			}
+
+			if ( ! empty( $element['elements'] ) ) {
+				$element = $this->find_element_recursive( $element['elements'], $form_id );
+
+				if ( $element ) {
+					return $element;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Woo Checkout Update Order Review
+	 * return order review data
+	 *
+	 * @access public
+	 * @return void
+	 * @since 1.8.0
+	 */
+	public function woo_checkout_update_order_review() {
+		if ( isset( $_POST['orderReviewData'] ) ) { //phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$setting = $_POST['orderReviewData']; //phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.MissingUnslash, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			ob_start();
+			Woo_Checkout_Helper::checkout_order_review_default( $setting );
+			$woo_checkout_update_order_review = ob_get_clean();
+			wp_send_json(
+				array(
+					'order_review' => $woo_checkout_update_order_review,
+				)
+			);
+		}
+	}
+
+	/**
+	 * Add links to plugin's description in plugins table
+	 *
+	 * @param array  $links  Initial list of links.
+	 * @param string $file   Basename of current plugin.
+	 *
+	 * @return array
+	 */
+	public function rael_rate_plugin_link( $links, $file ) {
+		if ( plugin_basename( RAEL_PATH ) !== $file ) {
+			return $links;
+		}
+
+		$rate_url  = 'https://wordpress.org/support/plugin/responsive-addons-for-elementor/reviews/';
+		$rate_link = '<a target="_blank" href="' . esc_url( $rate_url ) . '" title="' . esc_attr__( 'Rate the plugin', 'responsive-addons-for-elementor' ) . '">' . esc_html__( 'Rate the plugin ★★★★★', 'responsive-addons-for-elementor' ) . '</a>';
+		$links[]   = $rate_link;
+		return $links;
+	}
+	// Count published posts/pages with RAE widgets by scanning _elementor_data used for sending review prompt
+	public function rael_get_published_with_widgets_count() {
+		global $wpdb;
+
+		// Count only published posts/pages that have _rael_has_widget = 1
+		$count = $wpdb->get_var( $wpdb->prepare(
+			"
+			SELECT COUNT(1)
+			FROM $wpdb->posts p
+			INNER JOIN $wpdb->postmeta pm ON p.ID = pm.post_id
+			WHERE p.post_type IN ('post','page')
+			AND p.post_status = 'publish'
+			AND pm.meta_key = %s
+			AND pm.meta_value = %s
+			",
+			'_rael_has_widget',
+			1
+		));
+
+		return (int) $count;
+	}
+	public function rael_check_widgets_in_post( $post_id, $post ) {
+		// Only scan published posts/pages
+		if ( 'publish' !== $post->post_status ) return;
+
+		// Avoid autosave loops
+		if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) return;
+
+		// Get Elementor JSON data
+		$data = get_post_meta( $post_id, '_elementor_data', true );
+		if ( empty($data) ) {
+			return;
+		}
+
+		// Decode only if string
+		if ( is_string( $data ) ) {
+			$elements = json_decode( $data, true );
+			if ( json_last_error() !== JSON_ERROR_NONE ) {
+				return;
+			}
+		} elseif ( is_array( $data ) ) {
+			$elements = $data;
+		} else {
+			// Unexpected type
+			return;
+		}
+		
+		$elements_array = isset( $elements['elements'] ) ? $elements['elements'] : $elements;
+
+		// Check recursively for any RAE widget
+		$found = self::rael_has_widget( $elements_array );
+
+		if ( $found ) {
+			update_post_meta( $post_id, '_rael_has_widget', 1 );
+		} else {
+			delete_post_meta( $post_id, '_rael_has_widget' );
+		}
+	}
+	// Recursive function to detect RAE widgets in Elementor JSON
+	public function rael_has_widget( $elements ) {
+		foreach ( $elements as $el ) {
+			if ( isset( $el['widgetType'] ) && strpos( $el['widgetType'], 'rael' ) === 0 ) {
+				return true;
+			}
+			if ( ! empty( $el['elements'] ) && $this->rael_has_widget( $el['elements'] ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public function rael_mark_template_imported() {
+		check_ajax_referer( 'rael_import_nonce', 'nonce' );
+
+		$post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+		if ( $post_id ) {
+			update_post_meta( $post_id, '_rael_template_imported', 1 );
+
+			// Clear and reset transient after new import
+			delete_transient( 'rael_template_imported_any' );
+			set_transient( 'rael_template_imported_any', 1, 30 * DAY_IN_SECONDS );
+		}
+
+		wp_send_json_success();
+	}
+
+	public function rael_save_duplicator_settings() {
+		check_ajax_referer( 'responsive-addons-for-elementor', '_nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error(
+				array(
+					'message' => esc_html__( 'Unauthorized', 'responsive-addons-for-elementor' ),
+				)
+			);	
+		}
+
+		// Get selected post types from JS
+		$post_types = isset($_POST['post_types']) ? (array) $_POST['post_types'] : array();
+		// Sanitize all values
+		$post_types = array_map('sanitize_text_field', $post_types);
+
+		// Save to WP options table
+		update_option('rael_duplicator_allowed_post_types', $post_types);
+
+		wp_send_json_success(array(
+			'message' => 'Saved',
+			'saved_value' => $post_types
+		));
+	}
+
+	public function rae_load_duplicator_scripts( $hook ) {
+
+		// Load ONLY on list table screens
+		if ( $hook === 'edit.php' ) {
+
+			wp_enqueue_script(
+				'rae-duplicator-admin',
+				RAEL_URL . 'admin/js/rae-duplicator-admin.js',
+				array('jquery'),
+				RAEL_VER,
+				true
+			);
+
+			wp_localize_script(
+				'rae-duplicator-admin',
+				'raeDuplicatorjs',
+				[
+					'allowed_types' => get_option('rael_duplicator_allowed_post_types', ['all']),
+				]
+			);
+			// NEW: add duplicate URL for Quick Edit button
+			wp_localize_script(
+				'rae-duplicator-admin',
+				'RAEDup',
+				[
+					'duplicate_url' => admin_url( 'admin.php?action=rael_duplicate_post' ),
+				]
+			);
+		}
+	}
+
+	public function rae_print_rst_template_views() {
+		// Plugin slug for Responsive Starter Templates
+		$plugin_slug = 'responsive-add-ons/responsive-add-ons.php';
+
+		// Button text depends on whether plugin is installed
+		$button_text = ( ! $this->is_plugin_installed( $plugin_slug ) ) ? 'Install RST Plugin ' : 'Activate RST Plugin';
+		?>
+		<div id="rael-promo-temp-wrap" class="rael-promo-temp-wrap" style="display: none">
+			<div class="rael-promo-temp-wrapper">
+				<div class="rael-promo-temp">
+					<a href="#" class="rael-promo-temp__close">
+						<i class="eicon-close" aria-hidden="true" title="Close"></i>
+					</a>
+
+					<div class="rael-promo-temp--left">
+						<div class="rael-promo-temp__logo">
+							<img src="<?php echo esc_url( RAEL_URL . 'admin/images/rst_logo.svg' ); ?>" alt="RST Logo" style="width: 151px; height: 45px;">
+						</div>
+						<div class="rael-promo-subheading">
+							<span class="subhead-text"><?php esc_html_e('150+ ','responsive-addons-for-elementor'); ?></span>
+							<span style="display:block;"><?php esc_html_e('Elementor Templates', 'responsive-addons-for-elementor'); ?></span>
+						</div>
+						<ul class="rael-promo-temp__feature__list">
+							<li><?php esc_html_e('500+ Elementor sections', 'responsive-addons-for-elementor'); ?></li>
+							<li><?php esc_html_e('Supports Elementor & Gutenberg', 'responsive-addons-for-elementor'); ?></li>
+							<li><?php esc_html_e('Powering 20,000+ Websites', 'responsive-addons-for-elementor'); ?></li>
+							<li><?php esc_html_e('Access to 250+ Full Site Templates', 'responsive-addons-for-elementor'); ?></li>
+						</ul>
+
+						<?php if ( ! $this->is_plugin_installed( $plugin_slug ) ) { ?>
+							<button class="rael-rst-plugin-installer" data-action="install" data-slug="<?php echo esc_html_e( 'responsive-add-ons','responsive-addons-for-elementor' ); ?>">
+								<?php esc_html_e( 'Install RST Plugin', 'responsive-addons-for-elementor' ); ?><i class="eicon-arrow-right"></i>
+
+							</button>
+						<?php } else { ?>
+							<?php if ( is_plugin_active( $plugin_slug ) ) { ?>
+								<button class="rael-rst-plugin-installer"><?php esc_html_e( 'Activated RST Plugin', 'responsive-addons-for-elementor'); ?><i class="eicon-arrow-right"></i></button>
+
+							<?php } else { ?>
+								<button class="rael-rst-plugin-installer" data-action="activate" data-basename="<?php echo esc_attr( $plugin_slug ); ?>">
+									<?php esc_html_e( 'Activate RST Plugin', 'responsive-addons-for-elementor'); ?><i class="eicon-arrow-right"></i></button>
+							<?php } ?>
+						<?php } ?>
+
+						<button class="rael-promo-status-submit" style="display: none"><?php esc_html_e('Submit','responsive-addons-for-elementor'); ?></button>
+						<span class="promo-success-msg" style="display:none"></span>
+
+					</div>
+
+					<div class="rael-promo-temp--right">
+						<img src="<?php echo esc_url( RAEL_URL . 'admin/images/rae-rst-promo-image.png' ); ?>" alt="RAEL Promo">
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Helper to check if a plugin is installed
+	 */
+	private function is_plugin_installed( $plugin_slug ) {
+		include_once ABSPATH . 'wp-admin/includes/plugin.php';
+		return file_exists( WP_PLUGIN_DIR . '/' . $plugin_slug );
+	}
+
+	public function rae_install_rplus_plugin () {
+
+		check_ajax_referer( 'rael_rst_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			wp_send_json_error( 'Permission denied' );
+		}
+
+		$plugin_slug = 'responsive-add-ons';
+		$plugin_file = 'responsive-add-ons/responsive-add-ons.php';
+
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+
+		// Install if missing
+		if ( ! file_exists( WP_PLUGIN_DIR . '/' . $plugin_file ) ) {
+
+			$api = plugins_api( 'plugin_information', [
+				'slug'   => $plugin_slug,
+				'fields' => [ 'sections' => false ],
+			] );
+
+			if ( is_wp_error( $api ) ) {
+				wp_send_json_error( $api->get_error_message() );
+			}
+
+			$upgrader = new Plugin_Upgrader( new Automatic_Upgrader_Skin() );
+			$result   = $upgrader->install( $api->download_link );
+
+			if ( is_wp_error( $result ) ) {
+				wp_send_json_error( $result->get_error_message() );
+			}
+		}
+
+		// Activate plugin
+		if ( ! is_plugin_active( $plugin_file ) ) {
+			activate_plugin( $plugin_file );
+		}
+
+		wp_send_json_success([
+			'message' => __( 'RST Plugin Activated', 'responsive-addons-for-elementor' ),
+		]);
+	}
+
+	/**
+	 * Check if plugin is installed or activated.
+	 *
+	 * @return string
+	 */
+	public function rael_plugin_status( $path ) {
+
+		if ( is_plugin_active( $path ) ) {
+			return 'activated';
+		}
+
+		// Check if RST is installed.
+		$installed_plugins = get_plugins();
+
+		if ( isset( $installed_plugins[ $path ] ) ) {
+			return 'activate';
+		} else {
+			return 'install';
+		}
+	}
+
+	/**
+	 * Get responsive theme status.
+	 * 
+	 * @return string 'activated' if active, 'activate' if installed, 'install' if not found.
+	 */
+	public function rael_get_responsive_theme_status() {
+		
+		$theme_slug = 'responsive';
+		$current_theme = wp_get_theme();
+		
+		// Check if responsive theme or its child theme is active.
+		if ($current_theme->get_stylesheet() === $theme_slug || $current_theme->get('Template') === $theme_slug) {
+			return 'activated';
+		}
+		
+		// Check if responsive theme is installed
+		$themes = wp_get_themes();
+		if (isset($themes[$theme_slug])) {
+			return 'activate';
+		}
+		
+		// Check if any child theme of responsive is installed
+		foreach ($themes as $theme) {
+			if ($theme->get('Template') === $theme_slug) {
+				return 'activate';
+			}
+		}
+		
+		return 'install';
+	}
+
+	/**
+	 * Retrieve all public custom post types and automatically filtering out Elementor / Theme Builder related CPTs.
+	 *
+	 * @return array Associative array of filtered custom post types.
+	 */
+	public function rael_get_all_cpts() {
+		$custom_post_types = get_post_types(
+			array(
+				'public'   => true,
+				'_builtin' => false,
+			),
+			'objects'
+		);
+
+		$filtered_cpts = array();
+		
+		foreach ($custom_post_types as $slug => $pt) {
+
+			// AUTO-REMOVE all Elementor / Theme Builder CPTs
+			if (
+				// Elementor common slug patterns
+				strpos($slug, 'elementor') === 0 ||
+				strpos($slug, 'e-') === 0 ||
+				strpos($slug, 'elementor-') === 0 ||
+				strpos($slug, 'etheme') === 0 ||
+
+				// Elementor Pro Theme Builder labels
+				stripos($pt->label, 'elementor') !== false ||
+				stripos($pt->label, 'template') !== false ||
+				stripos($pt->label, 'theme') !== false ||
+				stripos($pt->label, 'builder') !== false ||
+
+				// Some versions use "Kit" for Theme Style Library
+				stripos($pt->label, 'kit') !== false
+			) {
+				continue;
+			}
+
+			// Exclude if needed
+			if (in_array($slug, ['attachment'], true)) {
+				continue;
+			}
+
+			$filtered_cpts[$slug] = $pt->label;
+		}
+
+		return $filtered_cpts;
+	}
+
+	/**
+	 * Retrieves Google Map localization languages.
+	 *
+	 * @return array Associative array of Google Map localization languages.
+	 */
+	public function rael_google_map_local_lang() {
+		$langs = array(
+			'ar'    => __( 'ARABIC', 'responsive-addons-for-elementor' ),
+			'eu'    => __( 'BASQUE', 'responsive-addons-for-elementor' ),
+			'bg'    => __( 'BULGARIAN', 'responsive-addons-for-elementor' ),
+			'bn'    => __( 'BENGALI', 'responsive-addons-for-elementor' ),
+			'ca'    => __( 'CATALAN', 'responsive-addons-for-elementor' ),
+			'cs'    => __( 'CZECH', 'responsive-addons-for-elementor' ),
+			'da'    => __( 'DANISH', 'responsive-addons-for-elementor' ),
+			'de'    => __( 'GERMAN', 'responsive-addons-for-elementor' ),
+			'el'    => __( 'GREEK', 'responsive-addons-for-elementor' ),
+			'en'    => __( 'ENGLISH', 'responsive-addons-for-elementor' ),
+			'en-AU' => __( 'ENGLISH (AUSTRALIAN)', 'responsive-addons-for-elementor' ),
+			'en-GB' => __( 'ENGLISH (GREAT BRITAIN)', 'responsive-addons-for-elementor' ),
+			'es'    => __( 'SPANISH', 'responsive-addons-for-elementor' ),
+			'fa'    => __( 'FARSI', 'responsive-addons-for-elementor' ),
+			'fi'    => __( 'FINNISH', 'responsive-addons-for-elementor' ),
+			'fil'   => __( 'FILIPINO', 'responsive-addons-for-elementor' ),
+			'fr'    => __( 'FRENCH', 'responsive-addons-for-elementor' ),
+			'gl'    => __( 'GALACIAN', 'responsive-addons-for-elementor' ),
+			'gu'    => __( 'GUJARATI', 'responsive-addons-for-elementor' ),
+			'hi'    => __( 'HINDI', 'responsive-addons-for-elementor' ),
+			'hr'    => __( 'CROATIAN', 'responsive-addons-for-elementor' ),
+			'hu'    => __( 'HUNGARIAN', 'responsive-addons-for-elementor' ),
+			'id'    => __( 'INDONESIAN', 'responsive-addons-for-elementor' ),
+			'it'    => __( 'ITALIAN', 'responsive-addons-for-elementor' ),
+			'iw'    => __( 'HEBREW', 'responsive-addons-for-elementor' ),
+			'ja'    => __( 'JAPANESE', 'responsive-addons-for-elementor' ),
+			'kn'    => __( 'KANNADA', 'responsive-addons-for-elementor' ),
+			'ko'    => __( 'KOREAN', 'responsive-addons-for-elementor' ),
+			'lt'    => __( 'LITHUANIAN', 'responsive-addons-for-elementor' ),
+			'lv'    => __( 'LATVIAN', 'responsive-addons-for-elementor' ),
+			'ml'    => __( 'MALAYALAM', 'responsive-addons-for-elementor' ),
+			'mr'    => __( 'MARATHI', 'responsive-addons-for-elementor' ),
+			'nl'    => __( 'DUTCH', 'responsive-addons-for-elementor' ),
+			'no'    => __( 'NORWEGIAN', 'responsive-addons-for-elementor' ),
+			'pl'    => __( 'POLISH', 'responsive-addons-for-elementor' ),
+			'pt'    => __( 'PORTUGUESE', 'responsive-addons-for-elementor' ),
+			'pt-BR' => __( 'PORTUGUESE (BRAZIL)', 'responsive-addons-for-elementor' ),
+			'pt-PR' => __( 'PORTUGUESE (PORTUGAL)', 'responsive-addons-for-elementor' ),
+			'ro'    => __( 'ROMANIAN', 'responsive-addons-for-elementor' ),
+			'ru'    => __( 'RUSSIAN', 'responsive-addons-for-elementor' ),
+			'sk'    => __( 'SLOVAK', 'responsive-addons-for-elementor' ),
+			'sl'    => __( 'SLOVENIAN', 'responsive-addons-for-elementor' ),
+			'sr'    => __( 'SERBIAN', 'responsive-addons-for-elementor' ),
+			'sv'    => __( 'SWEDISH', 'responsive-addons-for-elementor' ),
+			'tl'    => __( 'TAGALOG', 'responsive-addons-for-elementor' ),
+			'ta'    => __( 'TAMIL', 'responsive-addons-for-elementor' ),
+			'te'    => __( 'TELUGU', 'responsive-addons-for-elementor' ),
+			'th'    => __( 'THAI', 'responsive-addons-for-elementor' ),
+			'tr'    => __( 'TURKISH', 'responsive-addons-for-elementor' ),
+			'uk'    => __( 'UKRANIAN', 'responsive-addons-for-elementor' ),
+			'vi'    => __( 'VIETNAMESE', 'responsive-addons-for-elementor' ),
+			'zh-CN' => __( 'CHINESE (SIMPLIFIED)', 'responsive-addons-for-elementor' ),
+			'zh-TW' => __( 'CHINESE (TRADITIONAL)', 'responsive-addons-for-elementor' ),
+		);
+
+		return $langs;
+	}
+
+
+}

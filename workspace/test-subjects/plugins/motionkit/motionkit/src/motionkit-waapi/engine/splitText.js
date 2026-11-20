@@ -1,0 +1,186 @@
+/**
+ * Pure-DOM text splitting for the free engine.
+ *
+ * Wraps each character or word of an element in its own span so the runner can
+ * stagger over them, then puts the element back exactly as it was. No dependency
+ * on GSAP or its SplitText plugin — this is an independent implementation.
+ */
+
+// Where the pre-split markup is parked. Held on the element rather than in a module-level map so a detached or re-rendered node takes its own state with it instead of leaking an entry.
+const ORIGINAL_HTML = '__mkSplitOriginalHtml';
+// Whether the element had an aria-label of its own before the split, so revert can tell "remove the one we added" from "keep the author's".
+const HAD_OWN_LABEL = '__mkSplitHadOwnLabel';
+// Whether the element carried the overlay attribute before the split, so revert removes only the one the split added.
+const HAD_OWN_OVERLAY = '__mkSplitHadOwnOverlay';
+
+// Read by the MotionKit editor's overlay: an element carrying "false" is highlighted as a whole, so hovering one letter of a split heading picks the heading rather than the letter. The GSAP engine's split registry sets the same attribute.
+const OVERLAY_ATTR = 'data-motionkit-overlay';
+
+const PART_ATTR = 'data-mk-split';
+// Marks the word wrapper a character split puts around each word. Not a part — it carries no PART_ATTR, so the runner never staggers over it and a re-split never counts it — and it exists only so the word cannot break across a line.
+const WORD_WRAP_ATTR = 'data-mk-split-word';
+
+const isSplit = (element) => ORIGINAL_HTML in element;
+
+function makePart(text, kind) {
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.setAttribute(PART_ATTR, kind);
+  // The parts are decoration: the element carries the real text as its accessible name, so assistive tech reads the word rather than spelling it out.
+  span.setAttribute('aria-hidden', 'true');
+  // inline-block so transforms apply — a plain inline span ignores translate and scale.
+  span.style.display = 'inline-block';
+  // Keeps the split from changing how the text wraps, which would otherwise reflow the page the moment an animation is attached.
+  span.style.whiteSpace = 'pre';
+  return span;
+}
+
+/* A character split wraps each word before splitting it. Every character is an inline-block, and a
+   browser treats two adjacent inline-blocks as a place it may break the line — so "AGENCY" came
+   apart as "A" at the end of one line and "GENCY" at the start of the next, and the heading's own
+   wrapping changed the moment an animation was attached. The wrapper is one atomic box around the
+   word, kept from wrapping inside itself, which is how GSAP's SplitText holds a word together too.
+   Whitespace stays outside it as plain text, so the line still breaks where it always did. */
+function makeWordWrap() {
+  const span = document.createElement('span');
+  span.setAttribute(WORD_WRAP_ATTR, '');
+  span.setAttribute('aria-hidden', 'true');
+  span.style.display = 'inline-block';
+  span.style.whiteSpace = 'nowrap';
+  return span;
+}
+
+/* Walks the element's text nodes in place, replacing each with the split parts for its own text. Editing text nodes rather than rewriting innerHTML is what preserves nested inline markup: <em>fast</em> keeps its <em>, it just gains spans inside it. */
+function splitTextNodes(root, kind, collected) {
+  const walker = document.createTreeWalker(root, 4 /* SHOW_TEXT */);
+  const textNodes = [];
+  let current = walker.nextNode();
+  while (current) {
+    textNodes.push(current);
+    current = walker.nextNode();
+  }
+
+  for (const node of textNodes) {
+    const text = node.nodeValue;
+    if (!text || !text.trim()) continue;
+
+    const fragment = document.createDocumentFragment();
+    // Split on whitespace but KEEP it: the separators are re-inserted as plain text so spacing and wrapping are unchanged, while only the visible pieces become animatable parts.
+    const tokens = text.split(/(\s+)/);
+
+    for (const token of tokens) {
+      if (!token) continue;
+      if (!token.trim()) {
+        fragment.appendChild(document.createTextNode(token));
+        continue;
+      }
+
+      if (kind === 'words') {
+        const part = makePart(token, 'word');
+        collected.push(part);
+        fragment.appendChild(part);
+      } else {
+        const wrap = makeWordWrap();
+        // Array.from rather than split(''), so an emoji or accented character stays one part instead of being cut into surrogate halves.
+        for (const char of Array.from(token)) {
+          const part = makePart(char, 'char');
+          collected.push(part);
+          wrap.appendChild(part);
+        }
+        fragment.appendChild(wrap);
+      }
+    }
+
+    node.parentNode.replaceChild(fragment, node);
+  }
+}
+
+/**
+ * Splits an element's text into animatable parts.
+ *
+ * @param {HTMLElement} element The element to split.
+ * @param {'chars'|'words'} [kind='chars'] What each part should be.
+ * @returns {HTMLElement[]} The parts, in document order — the list the runner staggers over.
+ */
+export function splitText(element, kind = 'chars') {
+  if (!element || typeof element.querySelectorAll !== 'function') return [];
+
+  // Re-splitting would nest spans inside spans and park the already-split markup as the "original", making revert restore a broken state.
+  if (isSplit(element)) {
+    return Array.from(element.querySelectorAll(`[${PART_ATTR}]`));
+  }
+
+  const originalText = element.textContent;
+  if (!originalText || !originalText.trim()) return [];
+
+  element[ORIGINAL_HTML] = element.innerHTML;
+  element[HAD_OWN_LABEL] = element.hasAttribute('aria-label');
+
+  const collected = [];
+  splitTextNodes(element, kind === 'words' ? 'words' : 'chars', collected);
+
+  // The element's children are now aria-hidden decoration, so without this it has no accessible name at all.
+  if (!element[HAD_OWN_LABEL]) {
+    element.setAttribute('aria-label', originalText);
+  }
+
+  element[HAD_OWN_OVERLAY] = element.hasAttribute(OVERLAY_ATTR);
+  if (!element[HAD_OWN_OVERLAY]) {
+    element.setAttribute(OVERLAY_ATTR, 'false');
+  }
+
+  return collected;
+}
+
+/**
+ * What an element is currently split into, or null when it is not split.
+ *
+ * The runner needs this to tell a split it can reuse from one it has to undo. Without it, changing
+ * Characters to Words kept the characters — `splitText` sees the element is already split and hands
+ * back the parts it finds — and turning splitting off left the spans in the page until teardown.
+ *
+ * @param {HTMLElement} element
+ * @returns {'chars'|'words'|null}
+ */
+export function splitKindOf(element) {
+  if (!element || !isSplit(element)) return null;
+
+  const first = element.querySelector(`[${PART_ATTR}]`);
+  const kind = first && first.getAttribute(PART_ATTR);
+  if (kind === 'word') return 'words';
+  if (kind === 'char') return 'chars';
+  // Parked markup with no parts left in it — a host re-render, say. Treated as split so the caller puts it back rather than splitting on top of it.
+  return 'chars';
+}
+
+/**
+ * Puts a split element back exactly as it was. Safe to call on an element that
+ * was never split, and safe to call twice.
+ *
+ * @param {HTMLElement} element The element to restore.
+ */
+export function revertSplit(element) {
+  if (!element || !isSplit(element)) return;
+
+  element.innerHTML = element[ORIGINAL_HTML];
+
+  if (!element[HAD_OWN_LABEL]) {
+    element.removeAttribute('aria-label');
+  }
+
+  // After the markup is back, so the element is whole again by the time the overlay may pick its children.
+  if (!element[HAD_OWN_OVERLAY]) {
+    element.removeAttribute(OVERLAY_ATTR);
+  }
+
+  delete element[ORIGINAL_HTML];
+  delete element[HAD_OWN_LABEL];
+  delete element[HAD_OWN_OVERLAY];
+}
+
+// The split kinds the runner accepts. Anything else means "do not split", which is the default for every existing animation.
+export const SPLIT_KINDS = ['chars', 'words'];
+
+export function isSplitKind(value) {
+  return SPLIT_KINDS.includes(value);
+}

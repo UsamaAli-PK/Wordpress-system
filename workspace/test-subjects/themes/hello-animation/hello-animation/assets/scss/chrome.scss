@@ -1,0 +1,16 @@
+/**
+ * chrome — the theme's own header, navigation, offcanvas and footer.
+ *
+ * Dead the moment Elementor's Theme Builder claims both locations, which is
+ * exactly when header.php and footer.php stop printing this markup.
+ *
+ * Breakpoints only, no :root — that belongs to base.css, which this always
+ * loads alongside.
+ */
+@import "utils/breakpoints";
+@import "utils/motion";
+@import "components/menu";
+@import "layout/header";
+@import "layout/offcanvas";
+@import "layout/footer";
+@import "components/menu-motion";

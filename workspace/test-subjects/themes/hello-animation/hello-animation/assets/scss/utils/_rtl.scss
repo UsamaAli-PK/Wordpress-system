@@ -1,0 +1,54 @@
+/**
+ * RTL-only rules.
+ *
+ * Everything directional elsewhere (left/right, margins, paddings, float,
+ * text-align, translateX, background-position) is mirrored automatically: the
+ * build runs every sheet through rtlcss into a *-rtl.css twin, and Enqueue
+ * swaps the twin in on RTL locales (wp_style_add_data 'rtl' => 'replace').
+ *
+ * What rtlcss cannot know is that a glyph points somewhere. "Next" with a
+ * right-pointing arrow is correct in English and backwards in Arabic, so the
+ * arrow and chevron icons get mirrored here, along with the chevron a nested
+ * desktop sub-menu item draws from the icon font (_header.scss), so it points
+ * at the flyout, which now opens to the left, and the comment Reply arrow
+ * (an inline SVG from comments.php) and the pagination's prev/next arrows, which
+ * are PNGs (template-parts/blog/paginations). The raw block is emitted into the
+ * -rtl sheet only; the LTR sheet carries nothing but this comment, which the
+ * compressed build drops.
+ *
+ * ::before rather than the <i> itself: a transform on the element would fight
+ * the hover nudges buttons give their icon, and the pseudo-element is inline,
+ * where a transform does nothing, until it is made inline-block.
+ */
+/*rtl:raw:
+.icon-wcf-angle-left::before,
+.icon-wcf-angle-right::before,
+.icon-wcf-arrow-left::before,
+.icon-wcf-arrow-left1::before,
+.icon-wcf-arrow-right::before,
+.icon-wcf-arrow-right1::before,
+.icon-wcf-arrow-right-1::before,
+.icon-wcf-arrow-right-2::before,
+.icon-wcf-arrow-right-3::before,
+.icon-wcf-arrow-right-4::before,
+.icon-wcf-checvron-right::before,
+.icon-wcf-chevron-left::before,
+.icon-wcf-circle-left::before,
+.icon-wcf-circle-right::before {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+.pagination-circle .prev img,
+.pagination-circle .next img,
+.comment-reply-link svg {
+  transform: scaleX(-1);
+}
+@media (min-width: 1200px) {
+  .header__nav .dp-menu .nav-direction-icon::after {
+    transform: scaleX(-1);
+  }
+  html[dir="rtl"] .header__nav .dp-menu li.ha-flip > a .nav-direction-icon::after {
+    transform: none;
+  }
+}
+*/

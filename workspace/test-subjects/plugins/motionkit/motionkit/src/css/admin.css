@@ -1,0 +1,1233 @@
+/* MotionKit Admin Dashboard */
+
+/* Reset WP admin defaults inside our page */
+/* The left margin cancels #wpcontent's padding so the grey background reaches the admin menu. No top margin: a -20px one pulled the header under the fixed admin bar, which the old vertical centring hid while the content was shorter than the viewport and the first long list exposed. The dashboard starts at the top like every other wp-admin screen. */
+.motionkit-page {
+  margin: 0 0 0 -20px;
+  padding: 80px 20px 48px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #1a1a2e;
+  background: #f4f5f7;
+  min-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* The footer's text is removed by ConnectPage::remove_admin_footer(); this collapses the empty bar and the room #wpbody-content keeps for it, so the page ends with its own bottom padding. This stylesheet loads on the MotionKit page only. */
+#wpfooter {
+  display: none;
+}
+
+#wpbody-content {
+  padding-bottom: 0;
+}
+
+.motionkit-license_key::placeholder {
+  color: #9ca3af;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: normal;
+}
+
+.motionkit-page *,
+.motionkit-page *::before,
+.motionkit-page *::after {
+  box-sizing: border-box;
+}
+
+/* ─── Seasonal offer (OfferBanner.php) ────────── */
+/* Above the card, as wide as it. The invisible button sits on the X drawn into the 1504x150 artwork. */
+.motionkit-offer--page {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  margin-bottom: 16px;
+}
+
+.motionkit-offer--page .motionkit-offer__link {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.motionkit-offer--page .motionkit-offer__link img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.motionkit-offer--page .motionkit-offer__close {
+  position: absolute;
+  left: 97.6%;
+  top: 20%;
+  width: 3.2%;
+  min-width: 24px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.motionkit-offer--page .motionkit-offer__close:focus-visible {
+  outline: 2px solid #5ea1ec;
+  outline-offset: 2px;
+}
+
+/* ─── Header ──────────────────────────────────── */
+.motionkit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 860px;
+  border-radius: 12px 12px 0 0;
+}
+
+.motionkit-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.motionkit-header-logo svg {
+  display: block;
+}
+
+.motionkit-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.motionkit-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.motionkit-header-account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+
+.motionkit-header-account-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.motionkit-header-email {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ─── Layout ──────────────────────────────────── */
+/* No overflow clipping here: a clipped ancestor is what a sticky table header sticks to, and the list headers must stick to the viewport. Nothing inside reaches the rounded corners, so nothing needs clipping. */
+.motionkit-layout {
+  display: flex;
+  width: 100%;
+  max-width: 860px;
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Sidebar ─────────────────────────────────── */
+/* Wide enough for "Animated Pages" on one line; at 160px it broke into two. */
+.motionkit-sidebar {
+  width: 184px;
+  flex-shrink: 0;
+  border-right: 1px solid #e5e7eb;
+  padding: 20px 0;
+  min-height: 360px;
+}
+
+/* The tab list stays in view while a long list scrolls. Sticky on the nav rather than the column: the column is stretched to the layout's height, so it has nowhere to move. 52px is the admin bar plus the column's own top padding. */
+.motionkit-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 52px;
+}
+
+.motionkit-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  border-left: 3px solid transparent;
+  outline: none;
+  white-space: nowrap;
+}
+
+.motionkit-sidebar-link:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.motionkit-sidebar-link:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.motionkit-sidebar-link--active {
+  background: #eff6ff;
+  color: #2563eb;
+  border-left-color: #2563eb;
+  font-weight: 600;
+}
+
+
+.motionkit-sidebar-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ─── Content ─────────────────────────────────── */
+.motionkit-content {
+  flex: 1;
+  /* A flex child's min-width defaults to its content width, so a wide table pushed the whole column past the card instead of scrolling inside it. */
+  min-width: 0;
+  padding: 24px 28px;
+}
+
+/* ─── Cards ───────────────────────────────────── */
+.motionkit-card {
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.motionkit-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.motionkit-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.motionkit-card-body {
+  padding: 20px 24px;
+}
+
+.motionkit-card-footer {
+  padding: 16px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+}
+
+.motionkit-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.motionkit-title-icon {
+  font-size: 16px;
+}
+
+.motionkit-card-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.motionkit-footer-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+}
+
+.motionkit-footer-desc {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Badges ──────────────────────────────────── */
+.motionkit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.motionkit-badge--success {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.motionkit-badge--error {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.motionkit-badge--warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.motionkit-badge--neutral {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* ─── Buttons ─────────────────────────────────── */
+.motionkit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s, box-shadow 0.25s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.motionkit-btn--primary {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.motionkit-btn--primary:hover,
+.motionkit-btn--primary:focus {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  outline: none;
+}
+
+.motionkit-btn--primary:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  transition-duration: 0.1s;
+}
+
+/* ─── Split text hover ───────────────────────── */
+.motionkit-btn--split { overflow: hidden; }
+.motionkit-btn__text { display: inline-flex; position: relative; overflow: hidden; }
+
+.motionkit-btn__char,
+.motionkit-btn__text::after {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.motionkit-btn__char { display: inline-block; }
+
+.motionkit-btn__text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  color: inherit;
+  pointer-events: none;
+}
+
+.motionkit-btn--split:hover .motionkit-btn__char { transform: translateY(-110%); }
+.motionkit-btn--split:hover .motionkit-btn__text::after { transform: translateY(-100%); }
+
+.motionkit-btn--outline {
+  background: #fff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.motionkit-btn--outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  color: #1a1a2e;
+}
+
+.motionkit-btn--danger {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.motionkit-btn--danger:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.motionkit-btn--sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ─── Forms ───────────────────────────────────── */
+.motionkit-form-group {
+  margin-bottom: 14px;
+}
+
+.motionkit-input {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #1a1a2e;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.motionkit-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.motionkit-input::placeholder {
+  color: #9ca3af;
+}
+
+.motionkit-form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+/* ─── Consent (Connect tab, disconnected) ───────── */
+.motionkit-consent {
+  margin: 20px 0 0;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.motionkit-consent-line {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.motionkit-consent-details {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.motionkit-consent-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.motionkit-consent-details ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* ─── Info Rows (Connect tab) ─────────────────── */
+.motionkit-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.motionkit-info-row+.motionkit-info-row {
+  border-top: 1px solid #f3f4f6;
+}
+
+.motionkit-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.motionkit-info-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.motionkit-info-value {
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+/* ─── License Active ──────────────────────────── */
+.motionkit-license-key-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.motionkit-license-key-value {
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 13px;
+  color: #4b5563;
+  letter-spacing: 0.5px;
+}
+
+/* ─── Notices ─────────────────────────────────── */
+.motionkit-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.motionkit-notice--success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.motionkit-notice--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.motionkit-notice--info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.motionkit-notice-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* The post-connect card: a title, a line of what happens next and the editor button, which the one-line strip had no room for. */
+.motionkit-notice--connected {
+  flex-wrap: wrap;
+  padding: 16px 44px 16px 16px;
+}
+
+.motionkit-notice-body {
+  display: flex;
+  flex: 1 1 240px;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.motionkit-notice-title {
+  font-size: 14px;
+}
+
+.motionkit-notice-text {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.motionkit-notice-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  padding: 0;
+  line-height: 1;
+}
+
+.motionkit-notice-close:hover {
+  opacity: 1;
+}
+
+/* ─── Help Tab ────────────────────────────────── */
+
+/* Support Banner */
+.motionkit-support-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.motionkit-support-banner-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.motionkit-support-banner-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Help Grid — two cards side by side */
+.motionkit-help-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.motionkit-help-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.motionkit-help-card-img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.motionkit-help-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.motionkit-help-card-desc {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* Legacy (kept for compat) */
+.motionkit-help-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #2563eb;
+  background: #eff6ff;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.motionkit-help-link:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.motionkit-card-body .motionkit-license_key {
+  border: 1px solid #e5e7eb;
+  background: #F4F4F5;
+  padding: 5px 16px;
+  border-radius: 8px;
+  font-size: 14px;    
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+
+.motionkit-license_key:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ─── Modal ───────────────────────────────────── */
+/* Shared by the Tools tab's delete-all confirm and the Animations tab's details popup; each tab's own stylesheet adds its specifics. */
+.motionkit-modal[hidden] {
+  display: none;
+}
+
+.motionkit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.motionkit-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.motionkit-modal-box {
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.motionkit-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.motionkit-modal-desc {
+  margin: 0 0 16px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.motionkit-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* ─── Details popup ───────────────────────────── */
+/* One row's details and its actions, opened from an Actions button: the Animations tab's animation popup and the Tools tab's record popup are both this. */
+.motionkit-details-modal-box {
+  max-width: 540px;
+  padding: 24px 28px 22px;
+}
+
+.motionkit-details-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.motionkit-details-close:hover,
+.motionkit-details-close:focus {
+  background: #f3f4f6;
+  color: #111827;
+  outline: none;
+}
+
+.motionkit-details-modal .motionkit-modal-title {
+  margin-bottom: 2px;
+  padding-right: 36px;
+  overflow-wrap: anywhere;
+}
+
+/* wp-admin gives every code element a grey background and padding, which on a block-level id read as a full-width bar under the title. */
+.motionkit-details-id {
+  display: block;
+  margin-bottom: 16px;
+  padding: 0;
+  background: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  overflow-wrap: anywhere;
+}
+
+.motionkit-details {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  row-gap: 12px;
+  column-gap: 16px;
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.motionkit-details dt {
+  margin: 0;
+  align-self: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.motionkit-details dd {
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  color: #1a1a2e;
+}
+
+/* A value read whole, wrapped: a selector or a storage key that the table could only clip. */
+.motionkit-details-code {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.motionkit-details-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.motionkit-details-link {
+  margin-left: 6px;
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.motionkit-details-link:hover {
+  text-decoration: underline;
+}
+
+.motionkit-details-actions {
+  flex-wrap: wrap;
+}
+
+/* The destructive action sits alone on the left, away from the buttons that keep the record. */
+.motionkit-details-actions .motionkit-details-destructive {
+  margin-right: auto;
+}
+
+/* .motionkit-btn sets display, which would beat the browser's own [hidden] rule and show a button the row has no link for. */
+.motionkit-details-modal [hidden] {
+  display: none !important;
+}
+
+.motionkit-card-body--flush {
+  padding: 0 !important;
+}
+
+/* ─── Long table ──────────────────────────────── */
+/* The list grows with the page and the next rows load as the page is scrolled to its end, so there is no inner scroll box to run out of; the header row sticks under the admin bar while the rows pass beneath it. */
+.motionkit-table-scroll thead th {
+  position: sticky;
+  top: 32px;
+  z-index: 1;
+  /* A collapsed border does not travel with a sticky cell, so the line under the header is drawn as a shadow. */
+  box-shadow: inset 0 -1px 0 #e5e7eb;
+}
+
+@media screen and (max-width: 782px) {
+  .motionkit-table-scroll thead th {
+    top: 46px;
+  }
+
+  /* wp-admin grows every checkbox to 25px on a narrow screen; with the two fixed columns beside it that left the title a third of the row. The desktop box, and the desktop check mark inside it. */
+  .motionkit-table-scroll input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    min-width: 1rem;
+    margin: 0;
+  }
+
+  .motionkit-table-scroll input[type="checkbox"]:checked::before {
+    width: 1.3125rem;
+    height: 1.3125rem;
+    margin: -0.1875rem 0 0 -0.25rem;
+  }
+}
+
+/* Below 600px the admin bar scrolls away with the page, so the header sticks to the top edge. */
+@media screen and (max-width: 600px) {
+  .motionkit-table-scroll thead th {
+    top: 0;
+  }
+}
+
+/* ─── Back to top ─────────────────────────────── */
+/* Fixed in the lower right, out of the way of the rows; kept in the tree but invisible until admin.js adds the show class past the first screen, so it fades in rather than popping. */
+.motionkit-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  background: #fff;
+  color: #374151;
+  box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.motionkit-to-top--show {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.motionkit-to-top:hover,
+.motionkit-to-top:focus-visible {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  outline: none;
+}
+
+.motionkit-to-top:focus-visible {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+@media screen and (max-width: 782px) {
+  .motionkit-to-top {
+    right: 14px;
+    bottom: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionkit-to-top {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* A row scrolled into view (the Load more fallback) lands under the sticky header and the admin bar, not behind them. */
+.motionkit-table-scroll tbody tr {
+  scroll-margin-top: 90px;
+}
+
+/* ─── Table footer ────────────────────────────── */
+/* "Showing 20 of 93" over a centred Load more, under a list that renders in steps. */
+.motionkit-table-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #f3f4f6;
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.motionkit-table-footer .motionkit-btn {
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.motionkit-table-footer[hidden],
+.motionkit-table-footer .motionkit-btn[hidden] {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .motionkit-details {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
+  }
+
+  .motionkit-details dd {
+    margin-bottom: 10px;
+  }
+}
+
+/* ─── Responsive ─────────────────────────────── */
+@media (max-width: 782px) {
+  /* wp-admin narrows #wpcontent's padding to 10px and raises the admin bar to 46px here. */
+  .motionkit-page {
+    margin-left: -10px;
+    padding: 40px 12px 40px;
+    min-height: calc(100vh - 46px);
+  }
+
+  .motionkit-layout {
+    flex-direction: column;
+    border-radius: 12px;
+  }
+
+  .motionkit-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 8px 0;
+  }
+
+  /* A strip across the top here, scrolled away with the page: stuck under the admin bar it would sit on the table header, which sticks there too. */
+  .motionkit-sidebar-nav {
+    position: static;
+    flex-direction: row;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 8px;
+  }
+
+  .motionkit-sidebar-nav::-webkit-scrollbar { display: none; }
+
+  .motionkit-sidebar-link {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 10px 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .motionkit-sidebar-link--active {
+    border-left-color: transparent;
+    border-bottom-color: #2563eb;
+  }
+
+  .motionkit-content {
+    padding: 20px 16px;
+  }
+
+  .motionkit-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px 16px;
+  }
+
+  .motionkit-help-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Connector CTA ───────────────────────────── */
+
+.motionkit-connector-cta {
+  position: relative;
+  margin: 0 0 20px;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(135deg, #2f7bf6 0%, #7c5cff 50%, #1ea4c4 100%);
+  box-shadow: 0 10px 30px -12px rgba(47, 123, 246, 0.45);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.motionkit-connector-cta__glow {
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  background: radial-gradient(closest-side, rgba(124, 92, 255, 0.35), transparent 70%);
+  filter: blur(20px);
+  animation: mkctaFloat 7s ease-in-out infinite;
+}
+
+@keyframes mkctaFloat {
+  0%,
+  100% {
+    transform: translate(-8%, -6%);
+  }
+
+  50% {
+    transform: translate(10%, 8%);
+  }
+}
+
+.motionkit-connector-cta__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 22px;
+  border-radius: 15px;
+  background: #0e1526;
+  color: #eaf0ff;
+}
+
+.motionkit-connector-cta__icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  color: #ffd873;
+  background: linear-gradient(135deg, rgba(255, 216, 115, 0.16), rgba(255, 216, 115, 0.04));
+  box-shadow: inset 0 0 0 1px rgba(255, 216, 115, 0.28);
+}
+
+.motionkit-connector-cta__text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.motionkit-connector-cta__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #9fc0ff;
+  background: rgba(47, 123, 246, 0.14);
+  border: 1px solid rgba(47, 123, 246, 0.3);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.motionkit-connector-cta__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff;
+}
+
+.motionkit-connector-cta__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #a9b6d4;
+  max-width: 62ch;
+}
+
+.motionkit-connector-cta__action {
+  flex: 0 0 auto;
+}
+
+.motionkit-connector-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  padding: 11px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2f7bf6, #6a5cff);
+  box-shadow: 0 6px 16px -6px rgba(47, 123, 246, 0.7);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.motionkit-connector-cta__btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 22px -6px rgba(106, 92, 255, 0.8);
+  color: #fff;
+}
+
+.motionkit-connector-cta__btn:active {
+  transform: translateY(0);
+}
+
+.motionkit-connector-cta__btn svg {
+  transition: transform 0.18s ease;
+}
+
+.motionkit-connector-cta__btn:hover svg {
+  transform: translateY(2px);
+}
+
+@media (max-width: 640px) {
+  .motionkit-connector-cta__body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .motionkit-connector-cta__action {
+    width: 100%;
+  }
+
+  .motionkit-connector-cta__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motionkit-connector-cta__glow {
+    animation: none;
+  }
+}

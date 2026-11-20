@@ -1,0 +1,17 @@
+<wpml-config>
+	<!--
+		Customizer text the site owner writes, registered with WPML String
+		Translation. Polylang reads this file too. A child theme stores its
+		mods under theme_mods_<child-slug> and needs its own copy of this key.
+	-->
+	<admin-texts>
+		<key name="theme_mods_hello-animation">
+			<key name="header_button_text" />
+			<key name="ha_button_url" />
+			<key name="ha_copyright_text" />
+			<key name="ha_offcanvas_content" />
+			<key name="ha_offcanvas_gallery_title" />
+			<key name="ha_blog_search_heading" />
+		</key>
+	</admin-texts>
+</wpml-config>

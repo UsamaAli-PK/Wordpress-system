@@ -1,0 +1,42 @@
+/*
+Theme Name: Hello Animation
+Author: wealcoder
+Author URI: https://wealcoder.com/
+Description: Hello Animation is a lightweight Elementor theme built for motion, and the companion theme for the Animation Addons for Elementor plugin. Its header, footer, banner and blog layouts are made to sit under that plugin's GSAP scroll, hover and page-load animations, so an animated starter template imports and works without extra setup. It is a complete blog theme on its own too: self-hosted DM Sans and Space Grotesk, conditional stylesheets, no jQuery dependency, threaded comments, four footer widget areas and a left, right or centred sidebar. Suited to animated agency, portfolio, business and blog sites.
+Version: 1.1.10
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: hello-animation
+Requires PHP: 7.4
+Requires at least: 6.5
+Tested up to: 7.1
+Domain Path: /languages
+Tags: blog, theme-options, featured-images, custom-logo, custom-menu, footer-widgets, left-sidebar, right-sidebar, full-width-template, post-formats, sticky-post, threaded-comments, translation-ready, rtl-language-support
+*/
+
+/*
+Hello Animation WordPress Theme, Copyright 2026 wealcoder
+Hello Animation is distributed under the terms of the GNU General Public
+License, version 2 or later.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+Kept here as well as in readme.txt because Theme Check's copyright notice scan
+reads style.css, readme.txt and licence.txt as one blob, and a notice it cannot
+find is a warning a human reviewer then has to rule on by hand.
+
+IMPORTANT, and this is what failed the 1.1.6 upload: that scan finds these files
+by looking for the literal path `hello-animation/style.css` — the theme slug,
+then the file name. It is matching the *path*, not the file. Package the release
+in a directory named anything else, `hello-animation-1.1.6` being the obvious
+way to get it wrong, and no file matches, the combined content is empty, and the
+notice is reported missing however many copies of it the theme ships. The zip's
+top-level directory has to be exactly `hello-animation`.
+*/

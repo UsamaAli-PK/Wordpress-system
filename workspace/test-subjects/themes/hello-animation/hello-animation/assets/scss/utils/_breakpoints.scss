@@ -1,0 +1,19 @@
+// Responsive Variable
+//
+// Lifted out of _variables.scss so a stylesheet can have the breakpoints
+// without also emitting the :root block. Every entry file needs these — blog
+// and header rules are full of @media #{$md} — but only one of them may print
+// the custom properties, or every page would carry three copies.
+//
+// _variables.scss imports this, so anything that used to get the breakpoints
+// from there still does.
+
+$xxxl: 'only screen and (min-width: 1920px)';
+$xxl: 'only screen and (max-width: 1919px)';
+$xl-1: 'only screen and (max-width: 1700px)';
+$xl-2: 'only screen and (max-width: 1300px)';
+$xl: 'only screen and (max-width: 1399px)';
+$lg: 'only screen and (max-width: 1199px)';
+$md: 'only screen and (max-width: 991px)';
+$sm: 'only screen and (max-width: 767px)';
+$xs: '(max-width: 575px)';

@@ -1,0 +1,92 @@
+/**
+ * Customizer control styling.
+ *
+ * Only the repeater needs any — every other control in the theme is a core one
+ * and already looks the part. Hand-written rather than compiled from SCSS: it
+ * is admin-only, it never sees the theme's :root palette, and the build script
+ * has no entry for it.
+ */
+
+.ha-repeater__rows {
+	margin: 0 0 8px;
+	padding: 0;
+	list-style: none;
+}
+
+.ha-repeater__row {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 0 0 8px;
+	padding: 10px 10px 10px 6px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 2px;
+}
+
+.ha-repeater__handle {
+	flex: 0 0 auto;
+	margin-top: 2px;
+	color: #8c8f94;
+	cursor: move;
+}
+
+.ha-repeater__body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.ha-repeater__field {
+	display: block;
+	margin: 0 0 8px;
+}
+
+.ha-repeater__field:last-child {
+	margin-bottom: 0;
+}
+
+.ha-repeater__label {
+	display: block;
+	margin-bottom: 4px;
+	font-weight: 600;
+}
+
+.ha-repeater__field input[type="text"],
+.ha-repeater__field input[type="url"] {
+	width: 100%;
+}
+
+.ha-repeater__preview {
+	margin-bottom: 6px;
+}
+
+.ha-repeater__preview img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	border: 1px solid #dcdcde;
+}
+
+/* Holds the row's height steady between "no image" and "image chosen", so the
+   list does not jump every time someone picks one. */
+.ha-repeater__preview.is-empty {
+	height: 60px;
+	background: #f0f0f1;
+	border: 1px dashed #c3c4c7;
+}
+
+.ha-repeater__remove {
+	flex: 0 0 auto;
+	color: #b32d2e;
+	text-decoration: none;
+}
+
+.ha-repeater__remove:hover,
+.ha-repeater__remove:focus {
+	color: #8a2424;
+}
+
+.ha-repeater .ui-sortable-helper {
+	box-shadow: 0 2px 6px rgba( 0, 0, 0, 0.2 );
+}

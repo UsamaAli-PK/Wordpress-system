@@ -1,0 +1,31 @@
+/**
+ * Motion helpers. Mixins only — this file prints no CSS, so chrome and blog can
+ * both import it for free.
+ *
+ * Who animates what (so nothing is done twice):
+ *   CSS         the first screen, which has to paint before any script runs,
+ *               and everything driven by state: hover, focus, dropdowns, the
+ *               offcanvas opening. Entrances use the shared `ha-rise` keyframe.
+ *   JS + WAAPI  script.js reveals what is BELOW the fold as it scrolls in — the
+ *               one thing CSS cannot do portably — and staggers elements that
+ *               arrive together. It skips anything CSS already animates and
+ *               anything already on screen at load.
+ * Both sit behind the same two body classes (ha-motion-menu / ha-motion-content,
+ * from the Customizer) and prefers-reduced-motion.
+ */
+
+/// Entrance for the first $count siblings, staggered by --ha-step after $base.
+/// Later siblings get no CSS animation: they are the reveal's to handle.
+@mixin ha-enter($count: 4, $base: 0ms) {
+  animation: ha-rise var(--ha-dur) var(--ha-ease) backwards;
+
+  @for $i from 1 through $count {
+    &:nth-child(#{$i}) {
+      animation-delay: calc(var(--ha-step) * #{$i - 1} + #{$base});
+    }
+  }
+
+  &:nth-child(n + #{$count + 1}) {
+    animation: none;
+  }
+}

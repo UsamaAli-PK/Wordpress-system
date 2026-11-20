@@ -1,0 +1,146 @@
+.aae-a-toggle-switcher {
+	.aae-ts-pane:not(.show) {
+		display: none;
+	}
+
+	// Knob travel for the classic Switch preset. This used to be a hardcoded
+	// `translate(20px, -50%)`, which only ever looked right at the stock
+	// geometry: Track 40px wide with a 2px border (36px inner box) and a 16px
+	// Knob -- 36 - 16 = exactly 20. Track width, border width and Knob width
+	// are all Style-panel props, so the moment a builder widened the Track the
+	// Knob still moved its fixed 20px and stopped short of the right edge,
+	// leaving a gap that grew with every extra pixel of Track.
+	//
+	// Anchoring to 100% of the containing block instead makes the travel
+	// derive from the real boxes: `inset-inline-start: 100%` is the Track's
+	// PADDING box (Knob is absolute, Track is position:relative), and the
+	// -100% in the transform is the Knob's OWN width, so the Knob's right edge
+	// lands flush on the Track's inner right edge at any size. At the stock
+	// geometry it still computes to 20px, so nothing already published moves.
+	//
+	// Both properties are animatable and share the Knob's `transition: all`,
+	// so the slide stays smooth -- which rules out the tidier
+	// `inset-inline-start: auto; inset-inline-end: 0`, since `auto` is not
+	// interpolable and the Knob would jump instead of slide.
+	//
+	// `:not(.aae-ts-knob--pill)` keeps this away from the Pill preset, whose
+	// Knob is a 50%-wide full-height slot already travelling by its own width
+	// (rule further down) and whose transform carries no -50% Y to preserve.
+	//
+	// The X half is written as `translate`, NOT as part of `transform`, for two
+	// reasons. It stops clobbering the Knob's own Transform -- a Style-panel
+	// prop a builder may have set -- because `translate` is its own property
+	// and the two COMPOSE. And that composition is what lets this one rule
+	// serve both Knob models: a legacy absolutely-positioned Knob keeps the
+	// `translateY(-50%)` that pairs with its `inset-block-start: 50%`, while an
+	// in-flow Knob (centred by the Track's `align-items`) carries no Y at all.
+	.aae-ts-switch.active .aae-ts-knob:not(.aae-ts-knob--pill) {
+		inset-inline-start: 100%;
+		translate: -100%;
+	}
+
+	// The Track/Knob "on" look (background/border color) used to be this
+	// hardcoded rule, keyed to an undefined custom property
+	// (`--aae-ts-switcher-active-bg`, always resolving to its #000000
+	// fallback) — never editable from the panel. Track and Knob now both
+	// expose a real Style-panel "Selected" state (toggle-switcher.js toggles
+	// `e--selected` on them alongside `active`), so that per-instance local
+	// style is the only thing controlling the "on" color now — no shared
+	// hardcoded fallback needed or wanted here.
+
+	.aae-ts-label-before.active .aae-ts-highlight,
+	.aae-ts-label-after.active .aae-ts-highlight {
+		opacity: 1;
+		transform: translateX(0);
+	}
+
+	// Default Tab's out-of-the-box "Selected" look (dark pill, white text).
+	// Deliberately NOT declared as a `Style_States::SELECTED` variant in
+	// Aaeaddon_A_Toggle_Switcher_Tab::define_base_styles() — Elementor's own
+	// atomic-widget base-style compiler and a per-instance LOCAL style
+	// variant for the same state compile to identical specificity
+	// (`.<class>.e--selected`), so the winner is whichever loads later, and
+	// the editor's live style injection was found to inject base AFTER
+	// local for this exact combination — a builder who picks "Selected" in
+	// the Style panel and customizes it sees their color silently
+	// overridden back to this default, ONLY in the editor (frontend's
+	// generated CSS file orders local after base correctly). This rule
+	// lives here instead: a plain hook-class selector in a stylesheet that
+	// loads once, early, via a normal `<link>`, so ANY later per-instance
+	// local `e--selected` override (editor or frontend) reliably wins on
+	// load order — same fix already applied to Track/Knob's own "on" look.
+	.aae-ts-tab.e--selected {
+		background-color: #1a1a1a;
+		color: #ffffff;
+		border-radius: 8px;
+	}
+
+	// "Pill" look: Track is an invisible full-row wrapper (kept non-empty by
+	// its Knob child, so the editor's empty-container "+" affordance never
+	// triggers on it) and the Knob IS the sliding highlight, resized via its
+	// own editable local style to one row-slot instead of a small dot.
+	// Scoped to the `aae-ts-knob--pill` marker class (and a selector more
+	// specific than the classic rule below) so it never fights the classic
+	// Switch preset's fixed 20px knob travel.
+	.aae-ts-switch.active .aae-ts-knob.aae-ts-knob--pill {
+		transform: translateX(100%);
+	}
+
+	// Elementor's editor briefly renders every widget through a "remote
+	// render" placeholder pass (WidgetView.handleEmptyWidget() in Elementor
+	// core's editor.js) that stamps `.elementor-widget-empty` + a large
+	// centered `.elementor-widget-empty-icon` onto the wrapper — styled by
+	// Elementor's own editor-preview.css with a grey background and 22px
+	// icon padding. For this leaf widget the placeholder never gets cleaned
+	// back off once the real `.aae-ts-knob` content mounts alongside it, so
+	// both render together: the actual tiny dot underneath a much larger
+	// grey "add content" placeholder. Knob is an internal, non-draggable,
+	// content-less decorative dot (`show_in_panel(): false` — never meant to
+	// be dropped/filled by a builder), so that affordance is meaningless
+	// here; neutralize it. Editor-only — these classes never render on the
+	// frontend, so this is a no-op there.
+	.elementor-element.elementor-widget-e-aae-a-toggle-switcher-knob.elementor-widget-empty {
+		background: none !important;
+
+		.elementor-widget-empty-icon,
+		.ui-resizable-handle {
+			display: none !important;
+		}
+	}
+
+	// The SAME "remote render" placeholder pass also runs Knob's wrapper
+	// through jQuery UI's resizable() (hence `.ui-resizable` above), which
+	// sets `position: relative` on it (as an inline style, so it survives
+	// the rule above and needs !important here too) so its own resize
+	// handles can be absolutely positioned inside it. That wrapper sits
+	// BETWEEN Track and this widget's own `.aae-ts-knob` div — so once it
+	// becomes positioned, it (not Track) becomes `.aae-ts-knob`'s CSS
+	// containing block, and `.aae-ts-knob`'s own inset/percentage sizing
+	// resolves against ITS collapsed/empty box instead of Track's, computing
+	// to zero size (invisible) rather than the intended half-Track pill.
+	// Force it back to a non-positioning static box so `.aae-ts-knob`
+	// anchors to Track as intended — its resize handles are already hidden
+	// above, so this loses nothing. Editor-only, no-op on the frontend.
+	.elementor-widget-e-aae-a-toggle-switcher-knob {
+		// `display: contents` makes this wrapper generate no box at all, so the
+		// real `.aae-ts-knob` becomes a direct child of Track in the editor,
+		// exactly as it already is on the frontend. That matters now that the
+		// Knob sits in NORMAL FLOW: with the wrapper still a box, Track's flex
+		// line held the WRAPPER, the Knob's `inset-inline-start: 100%` resolved
+		// against the wrapper's shrink-to-fit width -- its own width -- and the
+		// -100% cancelled it exactly, so the Knob did not move at all when
+		// toggled and Track's `align-items` never reached it. Measured in the
+		// editor: 12/92 in BOTH states with the wrapper, 12/92 -> 92/12 without.
+		display: contents !important;
+
+		// Kept alongside, and still load-bearing for the Pill preset, whose Knob
+		// stays absolutely positioned: jQuery UI's resizable() puts an inline
+		// `position: relative` on this wrapper so its handles can sit inside it,
+		// which made the wrapper -- not Track -- that Knob's containing block,
+		// collapsing its percentage sizing to zero. `display: contents` already
+		// prevents that, but this costs nothing and keeps the old guarantee if a
+		// browser ever drops the box back in. The handles are hidden above, so
+		// nothing is lost either way. Editor-only, no-op on the frontend.
+		position: static !important;
+	}
+}

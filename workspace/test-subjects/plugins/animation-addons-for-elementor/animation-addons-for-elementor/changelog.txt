@@ -1,0 +1,524 @@
+
+== Changelog ==
+
+= 🌀 Animation Addons for Elementor v4.2.13 – 15th November 2026
+
+  - **Added:** CPT Builder: "Start from a template" with six ready-made post types (Event, FAQ, Portfolio, Service, Team Member, Testimonial). Pick one, then change anything in the edit screen. No taxonomy is created for you; each preset only suggests one.
+  - **Added:** Timeline: Border control for the content wrapper.
+  - **Fixed:** Deleting the plugin now also removes the seasonal offer banner records (dismiss and snooze settings and the per-user view counts).
+  - **Improved:** Dashboard: the offer banner is now centered above the app, and the WordPress "Thank you for creating with WordPress" footer line is hidden on the Dashboard, CPT Builder and Page Import screens.
+  - **Improved:** The plugin's core files now load through absolute paths, so they are found whichever folder WordPress or WP-CLI runs from.
+  - **Improved:** Dashboard, Setup Wizard, Page Import and CPT Builder now use WordPress's own React JSX runtime instead of a bundled copy, which makes their scripts smaller. Requires WordPress 6.6 or newer, as the plugin already does.
+
+= 🌀 Animation Addons for Elementor v4.2.12 – 14th November 2026
+
+  - **Changed:** The Black Friday offer now shows on every visit to the Plugins screen until "Don't show again" is clicked. The WordPress Dashboard still shows it at most twice per administrator, at least 10 minutes apart.
+
+= 🌀 Animation Addons for Elementor v4.2.11 – 14th November 2026
+
+  - **Added:** Black Friday offers until December 10. Sites without Animation Addons Pro see the lifetime plan offer; sites with Pro see the Agency Bundle offer.
+  - **Changed:** The offer shows on the WordPress Dashboard and Plugins screens at most twice per administrator, at least 10 minutes apart. Its close button hides it for 10 minutes; "Don't show again" hides it for good.
+  - **Changed:** On the Animation Addons screens the offer shows on every visit while it runs. Its close button hides it until the page is opened again.
+  - **Removed:** The old Black Friday banner and the expired 2025 Cyber Sale video in the dashboard.
+
+= 🌀 Animation Addons for Elementor v4.2.10 – 5th November 2026
+
+  - **Added:** Loop Grid: a "Grid ID" field. Name a grid here, then use the same name in the Loop Grid ID field of any filter that should drive it. Only needed when a page holds more than one Loop Grid.
+  - **Changed:** Loop Filter: the "Loop Grid ID" field is now a dropdown listing the Loop Grids on the page, instead of a text box. Filters that already hold a grid's element id keep working.
+  - **Fixed:** Presets: Button presets such as Pro Ellipse lost their border radius when saved on some Elementor versions, which broke the layout after a reload. Border radius is now converted to the key the installed Elementor expects.
+
+= 🌀 Animation Addons for Elementor v4.2.9 – 4th November 2026
+
+  - **Fixed:** Toggle Switcher: the knob now travels the full width of the switch when the Track width is changed. Previously the distance was hardcoded for the default size.
+  - **Fixed:** Toggle Switcher: the Track's left and right Padding now moves the knob. The knob is laid out inside the Track instead of being absolutely positioned. At zero padding the appearance is unchanged.
+  - **Fixed:** Toggle Switcher: corrected the knob position inside the Elementor editor.
+  - **Updated:** Toggle Switcher: the "Style Switch" preset now includes the fixes above, so new Toggle Switchers get them. Toggle Switchers already on your pages are not changed.
+  - **Fixed:** Loop Grid / Loop Filter: Loop Filter (Taxonomy) now works when added from a preset. The taxonomy was not being saved with the page, so the filter showed nothing.
+  - **Added:** WP Menu: "Active Color" control for menu items.
+  - **Added:** WP Menu: separate "Active Color" control for dropdown items.
+  - **Fixed:** WP Menu: the Mobile Drawer effect no longer shows an unwanted box shadow on the right side.
+  - **Fixed:** WP Menu: saving a page failed with "drawer_logo: invalid_value" after choosing a Drawer Header logo.
+  - **Fixed:** WP Menu: a newly added Menu could not be published unless a Drawer Header logo had been uploaded.
+  - **Fixed:** WP Menu: the hamburger button no longer appears on desktop with Hello Elementor and other themes that style all buttons.
+  - **Tweaked:** WP Menu: on such themes the mobile hamburger now follows the widget's own size, border, radius and hover settings instead of the theme's button style. It is 40×40 by default.
+  - **Fixed:** Dashboard: PRO extensions are no longer switched on by default without a valid license. Extensions already enabled are not turned off.
+  - **Added:** Atomic Widgets (all): default styling classes (e-default-<tag>) on Form, Nested Slider, Loop Grid, Timeline, Accordion, Advanced Heading and Button. Their built-in styles can now be overridden from the Style tab without writing CSS.
+
+= 🌀 Animation Addons for Elementor v4.2.8 – 24th October 2026
+
+  - **Added:** Nav presets. Two one-click looks, "Header Nav" and "Mega Menu (Pill)", applied from a new Presets section.
+  - **Added:** A Nav dropped on the canvas now builds itself from your WordPress menu. Only a freshly dropped Nav is touched — a pasted, duplicated or already-edited menu is left alone, and nothing is imported if the site has no menu.
+  - **Added:** Nav: "Auto-sync from WordPress", with an Update button that pulls fresh labels from a chosen menu while keeping your styling and any items you added by hand.
+  - **Added:** Nav: a Dropdown Behavior section. "Open On" (Click or Hover) and a dropdown animation now apply to the whole menu, instead of being set on every item separately.
+  - **Added:** Nav: a Mobile Menu Icons section for choosing your own hamburger, close, dropdown and back icons.
+  - **Added:** Nav: a "pick a part to style" list in the Mobile Menu panel. One click selects the Hamburger, Drawer, Overlay, Header bar, Close button, Back button or Menu area and opens its Style tab, and the drawer appears on the canvas while you work on it.
+  - **Added:** Nav: copy one menu item's styling to every item on the same level, from the menu item's row.
+  - **Added:** Counter: Easing (five curves), Play once or every time it scrolls into view, a thousand separator, and decimal places.
+  - **Added:** Advanced Heading: a Link option.
+  - **Added:** Advanced Portfolio: a "Studio Grid" preset.
+  - **Improved:** A newly dropped Counter sizes to its content instead of spanning the whole row. Counters already on a page are not changed.
+  - **Improved:** A new mobile menu drawer starts at a 350px width and a neutral look, so it no longer picks up the theme's button styling. Both stay editable in the Style tab, and existing menus are untouched.
+  - **Improved:** The inline text formatting toolbar has a cleaner look.
+  - **Improved:** A starter page or template whose content file is not a WordPress export (XML) now fails with a message that says so, instead of "No page was imported". The failure screen highlights the cause, links to the support forum and shows the template's name and ID to quote.
+  - **Fixed:** Nav: with "Open On: Click", a parent item that had a link followed that link instead of opening its dropdown, so the submenu could never be opened with a mouse. The first click now opens the dropdown and a second click follows the link. A parent with no link, or with "#", keeps its plain open and close toggle.
+  - **Fixed:** Nav: in the mobile drawer, a submenu's items were laid out in a row, so only the first one was visible.
+  - **Fixed:** Nav: Tab could move focus out of an open mobile drawer and onto the page behind it.
+  - **Fixed:** Nav: on themes with a large line height, the mobile Back and Close icons were drawn below the drawer header instead of inside it.
+  - **Fixed:** Nav: icons chosen under "Mobile Menu Icons" only reached the mobile menu while the Mobile Menu section was open, and an icon set directly on a menu part was overwritten again on the next edit.
+  - **Fixed:** Nav: closing the drawer preview in the editor left the canvas showing the hamburger instead of the desktop menu.
+  - **Fixed:** The Elementor 4.3 "Prop type is missing" SVG error also affected the Search Form's open and close buttons, the Form's Next and Previous buttons, and the Image Hotspot close button.
+  - **Fixed:** Documentation links on the dashboard's Extensions tab.
+
+= 🌀 Animation Addons for Elementor v4.2.7 – 15th October 2026
+
+  - **Added:** Dynamic Tags are now free. Post, Author, Site, Archive, Taxonomy, Comments, and Contact & Social tags (53 in all) work in Elementor V3 and V4 widgets without Animation Addons Pro. Content already built with these tags keeps working, because tag names are unchanged. ACF, Post Meta, and Custom Fields tags stay in Animation Addons Pro.
+  - **Fixed:** Saving a page as a non-administrator could end in a fatal error when it used an Author Info dynamic tag. The check that keeps email addresses out of non-admin edits now covers every dynamic control, not only the title.
+  - **Changed:** The shortcode dynamic tag's "escape output" filter is now `aaeaddon/dynamic_tags/shortcode_should_escape`. The previous name is still honored.
+  - **Security:** Fixed a stored XSS in the Countdown widget labels and expire text (CVE-2025-8444), and the same class of issue in Starter Animation, Category Showcase, Image Gallery lightbox, Progress Bar, Search, Animated Title, Loop Builder, Template Library, Atomic Nav, Atomic Slider and Atomic Social Share.
+  - **Security:** Fixed a reflected XSS on the template import failure screens.
+  - **Security:** Tightened permission checks in Loop Builder previews, Toggle Switcher, Loop Grid, Theme Builder, Forms, Mailchimp and Code Snippets. Only published templates render on the front end.
+  - **Security:** Icon pack and kit uploads are extracted to a temporary folder and checked there before being moved into place. The XML importer no longer unserializes objects.
+  - **Security:** CSV exports are protected against spreadsheet formula injection.
+  - **Security:** The site-wide Mailchimp API key is no longer sent to the Elementor editor. Leave the widget's key empty to use the site key; it is applied on the server.
+  - **Security:** The Popup widget renders a template only if it is published or the visitor may read it. The Atomic Loop Grid lists public post types only.
+  - **Security:** SVG icons fetched for the Atomic Nav dropdown and the slider arrows are reduced to plain SVG shapes before they are inserted.
+  - **Security:** Hardened the script-tag check in the HTML sanitizer and the XML importer's handling of serialized meta.
+  - **Fixed:** Presets imported from another site now load Elementor's placeholder image and the slider's arrow icons from your own site instead of the authoring site.
+  - **Fixed:** The Atomic Search Query heading tag is now the widget root, so Kit and theme heading styles no longer override it.
+  - **Improved:** Atomic Timeline text parts use inline editing.
+  - **Improved:** WPML configuration for more widgets.
+  - **Fixed:** Asset version now matches the plugin version, so browsers load the updated scripts and styles after an update.
+
+= 🌀 Animation Addons for Elementor v4.2.6 – 5th October 2026
+
+  - **Improved:** Performance optimization in Theme Builder by removing redundant rewrite rule flushes on request initialization.
+  - **Fixed:** Compatibility with Elementor 4.3 Svg_Control in Atomic Menu and Nav widgets to prevent "Prop type is missing" errors.
+  - **Improved:** Enhanced WPML multilingual compatibility across widgets and theme builder.
+  - **Fixed:** Template Library dependency dialog styling to seamlessly adapt to Elementor's Light and Dark themes.
+  - **Improved:** Template Library V4 insert now honors Live Paste image choices and drops foreign video IDs.
+  - **Fixed:** A brand-new install could show the "settings moved to new storage names" migration notice — when activated without the activation hook (installed by a template's dependency installer, or a network site created later) or reinstalled after being deleted.
+
+= 🌀 Animation Addons for Elementor v4.2.5 – 3rd October 2026
+
+  - **Fixed:** Section template previews in the Template Library opened without the template, because the preview link reached the demo site as "amp;post" instead of "post".
+
+= 🌀 Animation Addons for Elementor v4.2.4 – 28th September 2026
+
+  - **Fixed:** Starter Template import now says "Theme ready" when the template's theme is already your active theme, instead of asking you to install it.
+
+= 🌀 Animation Addons for Elementor v4.2.3 – 27th September 2026
+
+  - **Added:** Section Template v4 Filter.
+  - **Improved:** The Template Library lists Elementor V3 and V4 templates together; the version your site uses is simply the one selected first.
+  - **Changed:** Image Animation now runs from Animation Addons Pro. The free plugin keeps its settings in the editor.
+  - **Fixed:** The "Choose how to apply styles" dialog was unreadable in Elementor's dark mode.
+  - **Fixed:** Activating the plugin while Animation Addons Pro was already active reported "unexpected output during activation".
+  - **Fixed:** Translator notes for the Template Library strings, and numbered placeholders so a translation can reorder them.
+  - **Fixed:** Direct-access protection on the image import helper file.
+
+= 🌀 Animation Addons for Elementor v4.2.2 – 20th September 2026
+
+  - **Fixed:** Compatibility with older Animation Addons Pro releases.
+  - **Improved:** Multilingual dashboard stability.
+  - **Improved:** Form-table upgrade handling.
+  - **Improved:** Starter Template import error reporting.
+
+= 🌀 Animation Addons for Elementor v4.2.1 – 17th September 2026
+
+  - **Added:** Unique `aaeaddon` prefixes across plugin-defined functions, classes, constants, and namespaces.
+  - **Improved:** Security checks across public and editor-facing requests.
+  - **Improved:** Compatibility when Eliminator is disabled.
+
+= 🌀 Animation Addons for Elementor v4.1.0 – 8th September 2026
+
+  - **Changed:** This plugin no longer installs, activates, deactivates or switches any plugin or theme on your site. Elementor is declared through the "Requires Plugins" header, and WordPress handles the dependency. The only installer left is the one-click Elementor install, which runs from WordPress.org, only on a click, behind a nonce and the "install_plugins" capability.
+  - **Removed:** Activation and deactivation tracking, the deactivation feedback modal, and the setup wizard's email sign-up. The plugin sends nothing to data.animation-addons.com from anywhere, and collects nothing on activation or deactivation.
+  - **Removed:** The remote changelog fetch and the remote starter-template menu fetch. The dashboard now reads its own bundled menu instead of contacting a remote site on every load.
+  - **Removed:** Two unused libraries, typed.js and chroma.js, that visitors were downloading and nothing ever called. Select2 upgraded from the 4.1.0 release candidate to 4.1.0 final.
+  - **Added:** A complete "External Services" section in this readme. Every service the plugin can contact is listed with what it is for, when the request happens, exactly what is sent, its endpoints, and that service's terms and privacy policy.
+  - **Changed:** PHP code snippets are no longer evaluated by the free plugin. CSS, JavaScript and HTML snippets are unchanged.
+  - **Changed:** The admin menu moved from position 8 to 81, below Settings, where plugin menus belong.
+  - **Removed:** The promotional WordPress Dashboard widget that reordered the Dashboard to put itself on top, and a seasonal notice stylesheet that loaded on every admin screen for a notice that never rendered.
+  - **Fixed:** Every translatable string now passes a literal text domain, so all 9,326 of them are extractable by translators. Previously 481 call sites passed a wrapper or a class constant and were invisible to the parser, including the entire ISO country list.
+  - **Fixed:** Security pass across the whole plugin. Every AJAX action and REST route now checks both a nonce and a capability; an uploaded icon pack can no longer leave an executable file in a public folder; the two public share and reaction counters validate their values against a fixed list; and every output buffer is closed in the function that opened it.
+  - **Fixed:** Admin styles no longer load on every admin screen, only on the plugin's own screens.
+  - **Fixed:** readme.txt and the plugin header now state the same minimum WordPress version.
+
+= 🌀 Animation Addons for Elementor v4.0.0 – August 2026
+
+  - **Added:** Support for Elementor's V4 atomic elements: an atomic widget set, atomic animation extensions, and a dashboard for switching each widget and extension on or off.
+  - **Added:** Starter template and page import that carries an Elementor V4 design system (global classes and global variables), with an option to copy linked template images into your own Media Library.
+  - **Added:** Form Builder, Code Snippets, Custom Fonts, Custom Icons and Post Type Builder screens under a single Animation Addons menu.
+  - **Improved:** Performance options for how the animation runtime is delivered, including lazy loading and a reduced-motion mode.
+
+= 🌀 Animation Addons for Elementor v2.7.1 – 21th July 2026 
+
+  - **Fixed:** Wordpress Security Fixation.
+
+= 🌀 Animation Addons for Elementor v2.7.0 – 7th July 2026
+
+    - Fixed: Variability issue fixed.
+    - Improved: Removed unused code.
+
+= 🌀 Animation Addons for Elementor v2.6.9 – 2nd July 2026
+
+    - Fixed: Security Fixed at whole plugin.
+    - Improved: Performance Improved at whole plugin.
+
+
+= 🌀 Animation Addons for Elementor v2.6.8 – 16th June 2026
+
+    - Fixed: Image Gallery lightbox issue — it is now working perfectly.
+    - Improved: Reduced plugin size for better performance and faster loading.  
+
+= 🌀 Animation Addons for Elementor v2.6.7 – 2nd June 2026
+
+    - Improved: Text Domain Mismatch at Image Accordion, Advanced Pricing Table and Weather widgets.
+    - Improved: WPML Compatibility at Post social share and Image Accordion widget.
+    - Fixed: security fixed in Image and Loop Grid Widget.
+
+= 🌀 Animation Addons for Elementor v2.6.6 – 23th May 2026
+
+    - Fixed: Button icon size was not working properly, it now works correctly.
+    - Improved: Button — All icon-related fields are now dependent on the icon being enabled.
+    - Improved: Advanced Button - All Icon-related fields are now dependent on the icon being enabled.
+    - Imporoved : DisableEditor Mode Field order changes and UI more user-friendly.
+    - Improved: Nav Menu- Each Items Of Menu  are now full block clickable and Submenu working fine.
+
+= 🌀 Animation Addons for Elementor v2.6.5 – 19th May 2026
+
+    - Fixed : Icon Box- for style 2 Icon Hover Style add for Control Icon Hover Effect
+    - Fixed: Advance accordion- Close and Open Icon doesn't properly Synchronize. Now working fine.
+    - Imporoved : Animated-Heading- Text Decoration no need in heading style settings.
+
+= 🌀 Animation Addons for Elementor v2.6.4 – 4th May 2026
+
+    - Fixed : Loop Grid Default pagination Icon size.
+    - Fixed : Loop Grid Pagination alignment.
+    - Improved: Widget Categories Toggle Position reorder.
+    - Improved: Loop Grid , weather, archive widget security maintain.
+
+= 🌀 Animation Addons for Elementor v2.6.3 – 20th April 2026
+  
+    - Added: Lightbox Feature Added at  Image Gallery Widget
+    - Imporoved: Dashboard Performance Improved.
+    - Added: Brand Slider Widget- New control auto slide width
+
+= 🌀 Animation Addons for Elementor v2.6.2 – 9th April 2026
+
+  - Added: Language Support at Dashboard.
+  - Improved: Moderate performance issues solved in both the builder and frontend.
+ 
+= 🌀 Animation Addons for Elementor v2.6.1 – 1st April 2026
+
+    - Fixed: Single Post Template Issues.
+
+= 🌀 Animation Addons for Elementor v2.6.0 – 29th March 2026
+
+    - Fixed: React Lazyload issues.
+    - Improved: Modarate performance issues solved in both the builder and frontend.
+
+= 🌀 Animation Addons for Elementor v2.5.9 – 16th March 2026
+
+    - Improved: Boost performance in both the builder and frontend.
+
+= 🌀 Animation Addons for Elementor v2.5.8 – 12th March 2026
+
+    - Fixed: Nav menu widget conflict issues.
+
+= 🌀 Animation Addons for Elementor v2.5.7 – 10th March 2026
+
+    - Fixed: Starter Animation conflict issues.
+
+= 🌀 Animation Addons for Elementor v2.5.6 – 5th March 2026
+
+    - Fixed: Starter Animation Issue Fixed.
+    - Fixed: Loop grid widget conflict with Elmentor Loop grid issue fixed.
+    - Imporved: Starter Animation Dependancy remove as extension.
+
+= 🌀 Animation Addons for Elementor v2.5.5 – 22th February 2026
+
+    - Added: New Free Starter Animation For Text, Image, Container .
+    - Added: Advanced Pricing Table -New Widget Introduce.
+    - Added: Weather -New Widget Introduce.
+    - Added: 27 Free templates.
+    
+= 🌀 Animation Addons for Elementor v2.5.4 – 16th February 2026
+
+  - **Improved:** Cleaned up unnecessary code
+  - **Added:** 3+ Section's Added.
+
+= 🌀 Animation Addons for Elementor v2.5.3 – 1st February 2026
+
+  - **Feature:** Add WPML Support for All Widgets.
+  - **Feature:** Add None Option of Ease Field at Animation Extension section.
+
+= 🌀 Animation Addons for Elementor v2.5.2 – 26 January 2026
+
+  - **Updated:** Extensions Icons
+  - **Fixed:** Filterable Slider issue
+
+= 🌀 Animation Addons for Elementor v2.5.1 – 19 January 2026
+
+  - **Fix:** ScrollSmoother saving issue
+
+
+= 🌀 Animation Addons for Elementor v2.5.0 – 18 January 2026
+
+  - **Fix:** Dashboard RTL issues
+  - **Fix:** Korean Language design load issue
+  - **Fix:** ThemeBuilder Specific page search issue
+  - **Added:** ScrollSmoother responsive Controls
+  - **Added:** Animated Heading Color Mode
+
+= 🌀 Animation Addons for Elementor v2.4.9 – 04 Jan 2026
+
+  - **Fix:** Stacking Card Url 
+  - **Fix:** Dynamic Tag for taxonomy page
+
+= 🌀 Animation Addons for Elementor v2.4.8 – 21 December 2025
+
+  - **Fix:** ThemeBuilder slug and id while import demo
+  - **Fix:** Add Dynamic Tag support in several widgets
+
+= 🌀 Animation Addons for Elementor v2.4.7 – 08 Dec 2025
+
+- **Fix: Animation Markup Control**  
+  Resolved an issue where animation markup controls were not rendering correctly, ensuring smoother and more consistent animation behavior.
+
+- **Fix: Theme Builder – Header/Footer Condition**  
+  Improved the trigger logic so header and footer conditions now work properly across all layouts.
+
+= 🌀 Animation Addons for Elementor v2.4.6 – 01 Dec 2025
+
+   - **Fix: Widget** - Loop grid style
+   - **Fix: Widget** - Youtube video
+   - **Fix: Widget** - Grid hover post responsive
+
+= 🌀 Animation Addons for Elementor v2.4.5 – 19 November 2025
+
+  - **Feature:** Add new widget Loop Builder
+  - **Feature:** Add Dynamic Tag support in several widgets
+  - **Feature:** Add new controls in several widgets
+  - **Feature:** Add Current template Names in admin bar
+  - **Feature:** Add new Tag support in Extension Code Snippet HTML Editor
+  - **Fix: Extension** - Popup template and script issues
+  - **Fix: Extension** - Code Snippet Code Editor issues
+  - **Fix: Widget** - Toggle style and responsive issue
+  - **Fix: Widget** - Breadcrumb link and category link and name issue
+  - **Fix: Widget** - Image Box link issue
+  - **Fix: Widget** - Advanced Button style issue
+  - **Fix: Widget** - Nested Slider Pagination Control issues
+  - **Fix: Widget** - Brand Slider Responsive and image control issues
+  - **Fix: Widget** - Author Box link issue
+  - **Fix: Widget** - Post Ratings form issues
+  - **Fix: Widget** - Advanced Accordion image issue
+  - **Enhancement:** Remove unused code and Update code to the latest version php
+  - **Enhancement:** Compatible some code with WordPress 6.8 Coding Standards
+  - **Security:** Fix some nonce security issues
+  - **Security:** Fix some sanitizing and escaping issues
+  - **Added:** 15+ RTL Website templates 
+
+= 🌀 Animation Addons for Elementor v2.4.4 – 06 November 2025
+
+      -🎨 **Added:** BlackFriday Offer  
+
+= 🌀 Animation Addons for Elementor v2.4.3 – 02 November 2025
+  
+  - 🪟 **Offcanvas Widget:** Added new control options, updated markup for better flexibility, optimized CSS, and replaced jQuery with lightweight JavaScript for enhanced speed.
+
+  - 📱**Nav Menu Widget:**
+    - **Added** new control panel for customization.
+    - **Fixed** mobile menu click issue on devices under 767px by reloading JavaScript dynamically.
+    - **Converted** jQuery logic to pure JavaScript for improved performance.
+
+  - 🖼️ **Image Accordion Widget:** Fixed functionality issues and completely refactored to vanilla JavaScript.
+  - 🔘 **Toggle Switcher:** Resolved toggle issues and refactored to pure JavaScript.
+
+= 🌀 Animation Addons for Elementor v2.4.2 – 27 October 2025
+    - 🎨 **Fixed:** Dashboard ScrollSmother Settings  
+
+= 🌀 Animation Addons for Elementor v2.4.1 – 26 October 2025
+  - 🧩 **Added:** Dashboard new widget  
+
+= 🌀 Animation Addons for Elementor v2.4.0 – 23 October 2025
+  - 🧩 **Improved:** Dashboard interface
+  - 🧩 **Improved:** Notice interface
+
+= 🌀 Animation Addons for Elementor v2.3.15 – 13 October 2025
+  - 🧩 **Fixed:** Resolved js on demand object
+
+= 🌀 Animation Addons for Elementor v2.3.14 – 12 October 2025
+
+  - ⚡ **Improved:** On-demand JS loading for **Contact Form 7**, **Toggle Switcher**, and **Counter** widgets for faster performance.  
+  - 📦 **Improved:** **Section Import Library** for smoother and more efficient section imports.  
+  - 🎨 **Fixed:** Enhanced **UX for the plugin dashboard** with a cleaner and more user-friendly interface.  
+  - 🧩 **Fixed:** Resolved **page import notice issue** for a better importing experience. 
+
+= Animation Addons for Elementor v2.3.13 – 24 September 2025 =
+
+  - 🆕 Added: 660+ Pages in Page importer 
+  - ✏️ Improved: Code Snippet design and functionality 
+  - ✏️ Improved: Section Import Library,
+  - 🎨 Fixed: Native Sticky Header using smoother options
+  - 🎨 Fixed: ThemeBuilder post-singulars condition
+
+= Animation Addons for Elementor v2.3.12 – 02 September 2025 =
+
+  - 🎨 Fixed: Toggle Widget for smoother interaction and better user experience
+  - 🎨 Fixed: Mailchimp Widget subscribing issue to ensure seamless email marketing integration
+  - 🎨 Fixed: Nested Element editor loading issue for faster, stable page building
+  - 🆕 Added: Code Snippet visibility option to give you more control and flexibility in your projects
+  - ✏️ Improved: Dashboard Starter Template design and filter for easier access to 220+ websites & 10,000+ sections
+
+= Animation Addons for Elementor v2.3.11 – 19 august 2025 = 
+  - 🆕 **Added:** Starter Template Menu
+  - 🎨 **Fixed:** Mobile navigation overlay issue for smoother user experience
+  - 🆕 **Added:** Code Snippet extension, 
+  - ✏️ **Improved** Dashboard widget docs
+
+= Animation Addons for Elementor v2.3.10 – 11 august 2025 = 
+  - 🆕 **Added:** 20+ premium widgets — now completely free for all users!
+  - 🎨 **Fixed:** Mobile navigation overlay issue for smoother user experience
+  - 🆕 **Added:** New Popup trigger — show popups on mouse leave to boost conversions
+  - ✏️ **Improved** Renamed “Pin” extension to “Sticky” for clearer usability and better user understanding
+
+= Animation Addons for Elementor v2.3.9 – 18 july 2025 = 
+  - 🎨 **Update:** Documentation with setup and usage guides for the new widgets.
+  - 🎨 **Optimize:** Faster, leaner JavaScript for both editor and frontend.
+  - 🆕 **Added:** Rating widget to showcase reviews and user feedback.
+  - 🆕 **Added:** Breadcrumbs widget for better site navigation in Elementor.
+
+= Animation Addons for Elementor v2.3.8 – 17 july 2025 =
+  - 🆕 **Added:** ClickPop Widget for header
+  - 🎨 **Fixed:** Starter Templates step  
+  - 🎨 **Update:** Countdown widget css
+
+= Animation Addons for Elementor v2.3.7 – 03 july 2025 =
+  - 🆕 **Added:** PopUp Builder Option
+  - 🎨 **Fixed:** Dashboard name issue
+  - 🎨 **Update:** meta style option
+
+= Animation Addons for Elementor v2.3.6 – 01 july 2025 =
+  - 🆕 **Added:** New title show control in meta widget 
+  - 🎨 **Fixed:** Change template library icon
+  - 🎨 **Update:** Community group link update
+
+= Animation Addons for Elementor v2.3.5 – 19 june 2025 =
+  - 🆕 **optimize:** Optimize Hotspot widget  
+  - 🎨 **Fixed:** Icon Box
+
+
+= Animation Addons for Elementor v2.3.4 – 19 june 2025 =
+  - 🆕 **Added:** Meta type review, read later, updated date 
+  - 🎨 **Fixed:** Template Library Cors 
+  - 🆕 **Added:** Image Hotspot widget
+  - 🆕 **Added:** Single Category Template Builder Capability
+  - 🎨 **Fixed:** Image Lazyload ScrollTrigger
+
+= Animation Addons for Elementor v2.3.3 – 02 june 2025 =
+  - 🆕 **Added:** Date and category filter in search widgets  
+  - 🆕 **Added:** 10 new pre built template 
+  - 🎨 **Updated:** Optimize js , css
+  - 🎨 **optimize:** Improve asset on demand in search widget
+
+= Animation Addons for Elementor v2.3.2 – 25 may 2025 =
+  - 🆕 **Added:** x time in meta widget
+  - 🆕 **Added:** Dependancy loaded in elementor widget for on demand asset load
+  - 🎨 **Updated:** Dashboard Settings for Youtube , Weather, Tiktok
+  - 🎨 **Updated:** Added ajax functionality in Search widget.
+
+= Animation Addons for Elementor v2.3.1 – 15 may 2025 =
+  - 🆕 **Added:** 5 animated business templates
+  - 🆕 **Added:** optin popup
+  - 🎨 **Fixed:** animation library dependancy
+
+ = Animation Addons for Elementor v2.3 – 07 may 2025 =
+  - ❌ **Removed:** remote request of chnagelog
+  - 🎨 **Fixed:** template library store process
+
+ = Animation Addons for Elementor v2.2 – 06 may 2025 =
+  - ❌ **Removed:** Draggable js
+  - 🎨 **Fixed:** user data security issue
+  - 🆕 **Added:** Added 5 website templates
+
+ = Animation Addons for Elementor v2.1.9 – 05 may 2025 =
+  - 🆕 **Added:** Added notice for pro element
+  - 🆕 **Added:** Responsive control to hide onepage nav title
+ 
+ = Animation Addons for Elementor v2.1.8 – 22 April 2025 =
+  - 🆕 **Added:** Scroll Smother option
+  - 🎨 **Fixed:** Table of content icon in dashboard
+  - 🆕 **Added:** One Page Nav svg size 
+
+ = Animation Addons for Elementor v2.1.7 – 16 April 2025 =
+  - 🎨 **Fixed:** Text Domain Translation Issue
+  - 🎨 **Fixed:** Fix  Pre Built Template Dashboard
+
+ = Animation Addons for Elementor v2.1.5 – 08 April 2025 =
+  - 🎨 **Fixed:** Pre Built Template SSL issue 
+  - 🎨 **Fixed:** Fix Toast Color Issue
+  - ✅ **Compatibility:** Optimized Markup compatibility with **Elementor core** for Animation.
+
+ = Animation Addons for Elementor v2.1.4 – 06 April 2025 =
+  - 🎨 **Fixed:** Slider animation issue
+  - 🎨 **Fixed:** Gallery Issue
+
+ = Animation Addons for Elementor v2.1.2 – 25 March 2025 =
+  - 🔄 **Updated:** Banner and dashboard updated
+  - 🔄 **Updated:** Live Copy Support current container index
+
+= Animation Addons for Elementor v2.1.1 – 20 March 2025 =
+  - 🔄 **Updated:** intro video and price tab
+  - 🔄 **Updated:** Update template Library vps path
+
+ =  Animation Addons for Elementorv2.0 – 13 March 2025 =
+  - ❌ **Removed:** GoodShare Library from social share widget
+  - 🔄 **Updated:** Updated Dashboard UI
+  - 🆕 **New Feature:** Added **Template Library**
+  - 🆕 **New Feature:** Added **Live Copy Paste**
+  - 🆕 **New Feature:** Added **Dynamic Tags**
+
+ = Animation Addons for Elementor v1.1.9 – 20 February 2025 =
+  - 🔄 **Updated:** Upgraded `SweetAlert.js` and `Typed.js` to the latest versions for improved performance and security.
+  - ✅ **Compatibility:** Verified full compatibility with **Elementor core**.
+  - ❌ **Removed:** Deprecated donation link for a cleaner user experience.
+  - 🔒 **Fixed:** Resolved **nonce security vulnerabilities** to enhance website security.
+
+ = Animation Addons for Elementor v1.1.8 – 17 December 2024 =
+  - 🎨 **Fixed:** Resolved **Swiper slider styling issues** for better mobile and desktop responsiveness.
+  - ✅ **Compatibility:** Ensured smooth integration with **Elementor core**.
+
+ = Animation Addons for Elementor v1.1.7 – 10 December 2024 =
+  - 🔒 **Security Fixes:**
+    - Patched security vulnerabilities in **Tab Widget** and **Content Slider Widget**.
+    - Implemented additional security layers for safer user interaction.
+  - 🆕 **New Feature:** Added **role-based access control** for **template selection** in Tab and Content Slider Widgets.
+
+ = Animation Addons for Elementor v1.1.6 – 27 November 2024 =
+  - 🛠️ **Fixed:** Corrected **text domain issues** for better multilingual support.
+  - ✅ **Tested:** Conducted compatibility tests with WordPress and Elementor updates.
+
+= Animation Addons for Elementor v1.1.5 – 22 October 2024 =
+  - 🚀 **Performance Boost:** Optimized **Social Share Widget** for **faster loading speed** and **improved SEO performance**.
+
+= Animation Addons for Elementor v1.1.4 – 22 October 2024 =
+  - 🆕 **New Addition:** Added a **download link** for the **"Extension for Animation Addons" plugin**, enabling **GSAP animation features**.
+
+= Animation Addons for Elementor v1.1.3 – 21 October 2024 =
+  - 🎨 **UI Enhancements:**
+  - Introduced **responsive title margin controls** in the **Counter Widget** for improved layout customization.
+  - 🔄 **Bug Fixes:**
+  - Resolved **meta description duplication** issue for better SEO indexing.
+  - Fixed **GoodShare console errors** to prevent script conflicts.
+
+= Animation Addons for Elementor v1.1.2 – 22 September 2024 =
+  - 🎨 **UI Enhancement:** Added **responsive input field height controls** in the **Contact Form 7 Widget** for better mobile optimization.
+
+= Animation Addons for Elementor v1.1.1 – 14 September 2024 =
+  - ⚡ **Performance Upgrade:**
+    - Replaced the outdated `Waypoints.js` library with the **native Intersection Observer API** for **faster and more efficient animations**.
+    - 🛠️ **Fixed:** **Progress Bar Widget** issue where progress was not displaying correctly.
+
+= Animation Addons for Elementor v1.0.0 – 1 April 2024 =
+ - 🚀 **Initial Release**

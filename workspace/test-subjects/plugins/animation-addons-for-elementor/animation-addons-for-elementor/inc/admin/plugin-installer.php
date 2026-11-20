@@ -1,0 +1,199 @@
+<?php
+
+namespace Wealcoder\AnimationAddons\Admin;
+
+use Wealcoder\AnimationAddons\Nonce;
+if (!defined('ABSPATH')) {
+    exit();
+} // Exit if accessed directly
+
+class Aaeaddon_Plugin_Installer
+{
+
+    /**
+     * The only plugin these endpoints may activate.
+     *
+     * The dashboard and the editor both send this exact basename, and the
+     * buttons that send it only render while Pro is installed but inactive.
+     * Accepting anything else would make this a general "activate any
+     * plugin" endpoint, which is not what the user was shown a button for.
+     */
+    const PRO_BASENAME = 'animation-addons-for-elementor-pro/animation-addons-for-elementor-pro.php';
+
+    public function __construct($reload = false)
+    {
+        if (!$reload) {
+
+            // 'wcf_active_plugin' is a deprecated alias (a cached admin bundle) -- remove in 4.3.
+            \Wealcoder\AnimationAddons\Ajax_Alias::register( 'wcf_active_plugin', 'aaeaddon_active_plugin', [$this, 'ajax_activate_plugin'] );
+            // Old unprefixed name kept for one release for a cached editor bundle -- remove the alias in 4.3.
+            \Wealcoder\AnimationAddons\Ajax_Alias::register('activate_from_editor_plugin', 'aaeaddon_activate_from_editor_plugin', [$this, 'activate_from_editor_plugin']);
+            add_action('wp_ajax_aaeaddon_template_dependency_status', [$this, 'dependency_status']);
+            add_action('wp_ajax_aaeaddon_atomic_import_status', [$this, 'atomic_import_status']);
+        }
+    }
+
+    /**
+     * Can a V4 (atomic) starter template be imported here, and is one already in?
+     *
+     * Asked by the starter-template grids the moment Import is pressed on a V4
+     * card -- not read from the page payload -- because the answer changes
+     * during a session: the first V4 import makes every later one a "second
+     * import", and that is the case the dialog exists for. Reports, never
+     * writes; the importer snapshots the same signal itself at step 1.
+     *
+     * @return void Sends JSON {available: bool, in_use: bool}.
+     */
+    public function atomic_import_status()
+    {
+        check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'You are not allowed to do this action', 'animation-addons-for-elementor' ) );
+        }
+
+        // The atomic registry only loads on Elementor 4+; without it there is
+        // nothing a V4 template could render with, so "not available" is the
+        // honest answer rather than an error.
+        if (!class_exists('\Wealcoder\AnimationAddons\AtomicWidgets\Atomic')) {
+            wp_send_json_success(['available' => false, 'in_use' => false]);
+        }
+
+        wp_send_json_success(\Wealcoder\AnimationAddons\AtomicWidgets\Atomic::import_signal());
+    }
+
+    public function ajax_activate_plugin()
+    {
+
+        check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce' );
+
+        if (!current_user_can('activate_plugins')) {
+            wp_send_json_error(__('You are not allowed to do this action', 'animation-addons-for-elementor'));
+        }
+
+        $basename = isset($_POST['action_base']) ? sanitize_text_field(wp_unslash($_POST['action_base'])) : '';
+
+        if (self::PRO_BASENAME !== $basename) {
+            wp_send_json_error(__('Invalid plugin.', 'animation-addons-for-elementor'));
+        }
+
+        // Not silent: a silent activation skips activate_{$plugin}, which is
+        // where Pro's own register_activation_hook() flushes rewrite rules.
+        $result = activate_plugin($basename, '', false, false);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+
+        wp_send_json_success(['message' => __('Plugin activated successfully!', 'animation-addons-for-elementor')]);
+    }
+
+    public function activate_from_editor_plugin()
+    {
+
+        check_ajax_referer( Nonce::action( Nonce::TEMPLATE_LIBRARY, 'nonce' ), 'nonce' );
+
+        if (!current_user_can('activate_plugins')) {
+            wp_send_json_error(__('You are not allowed to do this action', 'animation-addons-for-elementor'));
+        }
+
+        $basename = isset($_POST['action_base']) ? sanitize_text_field(wp_unslash($_POST['action_base'])) : '';
+
+        if (self::PRO_BASENAME !== $basename) {
+            wp_send_json_error(__('Invalid plugin.', 'animation-addons-for-elementor'));
+        }
+
+        // Not silent: a silent activation skips activate_{$plugin}, which is
+        // where Pro's own register_activation_hook() flushes rewrite rules.
+        $result = activate_plugin($basename, '', false, false);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error($result->get_error_message());
+        }
+
+        wp_send_json_success(__('Plugin activated successfully!', 'animation-addons-for-elementor'));
+    }
+
+    function check_plugin_status($base_path)
+    {
+
+        // is_plugin_active() is used immediately below; plugin.php is only
+        // loaded when core has not already done so.
+        if ( ! function_exists( 'is_plugin_active' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+        if (file_exists(WP_PLUGIN_DIR . '/' . $base_path)) {
+            return is_plugin_active($base_path) ? 'Active' : 'Inactive';
+        }
+
+        return __('Not Installed', 'animation-addons-for-elementor');
+    }
+
+    function check_theme_status($theme_slug)
+    {
+
+        $theme = wp_get_theme($theme_slug);
+
+        if ($theme->exists()) {
+            return (get_template() === $theme_slug) ? 'Active' : 'Installed';
+        }
+
+        return __('Not Installed', 'animation-addons-for-elementor');
+    }
+
+    /**
+     * Dependancy Check    
+     * @return mixed Json | bool
+     */
+    public function dependency_status()
+    {
+
+        check_ajax_referer( Nonce::action( Nonce::ADMIN, 'nonce' ), 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( __( 'You are not allowed to do this action', 'animation-addons-for-elementor' ) );
+        }
+
+        delete_option('aaeaddon_template_import_progress');
+        delete_option('aaeaddon_template_import_state');
+
+        // Ensure $_POST['dependencies'] exists
+        if (!isset($_POST['dependencies'])) {
+            wp_send_json_error(__('Missing dependencies data', 'animation-addons-for-elementor'));
+        }
+
+        $dependencies = sanitize_text_field(wp_unslash($_POST['dependencies']));
+        $dependencies = json_decode($dependencies, true);
+
+        $plugins = isset($dependencies['plugins']) && is_array($dependencies['plugins'])  ? $dependencies['plugins'] : [];
+        $themes = isset($dependencies['themes']) && is_array($dependencies['themes'])  ? $dependencies['themes'] : [];
+
+        // This plugin ships no installer. Something has to be listening on the
+        // starter-template hooks for a missing dependency to be installable at
+        // all, so when nothing is, the import screen says so per row instead of
+        // offering a checkbox that would quietly do nothing.
+        $not_installed       = __('Not Installed', 'animation-addons-for-elementor');
+        $can_install_plugins = (bool) has_action('aaeaddon/starter_template/install_plugin');
+        $can_install_themes  = (bool) has_filter('aae/starter_template/install_theme');
+
+        // Check plugin dependencies
+        foreach ($plugins as &$dep) {
+            $dep['status']    = $this->check_plugin_status($dep['Base_Slug']);
+            $dep['needs_pro'] = ($not_installed === $dep['status']) && !$can_install_plugins;
+        }
+        // This plugin installs no theme and switches none by itself. A theme row
+        // is only selectable when something is listening on the starter-template
+        // hook; otherwise it carries a status and a pointer to Appearance >
+        // Themes, exactly as before. `can_install` is what the screen reads to
+        // decide between a checkbox and a read-only row.
+        foreach ($themes as &$tm) {
+            $tm['status']      = $this->check_theme_status($tm['slug']);
+            $tm['can_install'] = $can_install_themes;
+            $tm['needs_pro']   = ($not_installed === $tm['status']) && !$can_install_themes;
+        }
+
+        wp_send_json_success(['dependencies' => ['plugins' => $plugins, 'themes' => $themes]]);
+    }
+}
+
+new Aaeaddon_Plugin_Installer();

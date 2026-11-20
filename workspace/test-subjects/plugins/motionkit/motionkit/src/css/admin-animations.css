@@ -1,0 +1,329 @@
+/**
+ * MotionKit Admin — Active Animations styles
+ */
+
+.motionkit-animations-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ─── Table ─── */
+/* Four columns (check, title, status, actions) fit the card, so the row never scrolls sideways; the per-animation details live in the popup. The list grows with the page, loading as it is scrolled (admin.css, .motionkit-table-scroll). */
+.motionkit-animations-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.motionkit-animations-table th,
+.motionkit-animations-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.motionkit-animations-table th {
+  font-weight: 600;
+  background: #f9fafb;
+  color: #374151;
+}
+
+.motionkit-animations-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.motionkit-animations-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.motionkit-animations-col-check {
+  width: 40px;
+}
+
+/* A long title wraps inside its cell instead of widening the table. */
+.motionkit-animations-col-title {
+  overflow-wrap: anywhere;
+}
+
+.motionkit-animations-col-status,
+.motionkit-animations-col-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.motionkit-animations-col-actions {
+  text-align: right;
+}
+
+.motionkit-animations-row-id {
+  display: block;
+  margin-top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.motionkit-animations-empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 32px 12px;
+}
+
+.motionkit-animations-header-card {
+  padding: 1.5rem 1.75rem;
+  background: linear-gradient(135deg, rgba(28, 126, 146, 0.04) 0%, rgba(89, 155, 253, 0.08) 100%);
+  border: 1px solid rgba(89, 155, 253, 0.18);
+}
+
+.motionkit-animations-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.motionkit-animations-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.35rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.motionkit-animations-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.motionkit-btn-plus {
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ─── Controls row ─── */
+/* Every control in the row (the bulk select, Apply, the page select) shares one 36px height, border and radius, so the row reads as one toolbar whether it fits on one line or wraps. */
+.motionkit-animations-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: #fafbfc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.motionkit-bulk-actions-wrap,
+.motionkit-filter-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The page filter takes the room that is left and pushes to the right; on a narrow card it wraps under the bulk controls as a full-width line. */
+/* The basis is the select's smallest useful size, so the bulk side can grow with its count ("Apply (100)") before anything wraps; min-width 0 because the group's automatic minimum is its content width, and the longest page title made that wider than the basis, so the row wrapped while the basis still fit. */
+.motionkit-filter-search-wrap {
+  flex: 1 1 140px;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+/* Scoped under the row on purpose: wp-admin's own `.wp-core-ui select` rule sets a 40px min-height and its own padding, and a bare class loses to it. */
+.motionkit-animations-controls-header .motionkit-select,
+.motionkit-animations-controls-header .motionkit-btn {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* Room on the right for wp-admin's own select arrow, which stays. */
+.motionkit-animations-controls-header .motionkit-select {
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+/* A fixed width rather than the content width: the longest option made the closed select 230px, which alone pushed the search side onto a second line inside the admin card. */
+#motionkit-bulk-action-select {
+  width: 170px;
+}
+
+/* The page select lists page titles, so it grows into the room the row has, up to a width that shows a long title whole; a fixed small width would clip every title at the closed select. */
+#motionkit-page-filter {
+  flex: 1 1 140px;
+  width: 140px;
+  min-width: 0;
+  max-width: 280px;
+}
+
+.motionkit-animations-controls-header .motionkit-btn {
+  padding: 0 1rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.motionkit-animations-controls-header .motionkit-btn:hover:not([disabled]) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1a1a2e;
+}
+
+/* Apply is disabled until a row and an action are both chosen; without a disabled look it read as a working button that did nothing. */
+.motionkit-animations-controls-header .motionkit-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.motionkit-animations-controls-header .motionkit-select:focus,
+.motionkit-animations-controls-header .motionkit-btn:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Tighter cells on a narrow screen, so the title keeps most of the row beside the two fixed columns. */
+@media screen and (max-width: 782px) {
+  .motionkit-animations-table th,
+  .motionkit-animations-table td {
+    padding: 10px 8px;
+  }
+
+  .motionkit-animations-table th:first-child,
+  .motionkit-animations-table td:first-child {
+    padding-left: 12px;
+  }
+
+  .motionkit-animations-table th:last-child,
+  .motionkit-animations-table td:last-child {
+    padding-right: 12px;
+  }
+
+  .motionkit-animations-col-check {
+    width: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .motionkit-bulk-actions-wrap {
+    width: 100%;
+  }
+
+  #motionkit-bulk-action-select {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+  }
+
+  #motionkit-page-filter {
+    max-width: none;
+  }
+}
+
+/* Engine Badges */
+.motionkit-badge-engine {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Beside the title in a row the badge is a small tag after the text, not the pill the popup's Type line shows. */
+.motionkit-animations-col-title .motionkit-badge-engine {
+  margin-left: 4px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.62rem;
+  vertical-align: 1px;
+}
+
+.motionkit-badge-engine--waapi {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.motionkit-badge-engine--gsap {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+/* Status Pill */
+.motionkit-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.motionkit-status-pill--on {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+.motionkit-status-pill--off {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.motionkit-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* The details popup (.motionkit-details-*) and the modal shell are in admin.css, shared with the Tools tab. */
+
+/* Inline Toast Notification */
+.motionkit-toast-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  animation: mkFadeIn 0.25s ease;
+}
+
+.motionkit-toast-banner--success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.motionkit-toast-banner--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@keyframes mkFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

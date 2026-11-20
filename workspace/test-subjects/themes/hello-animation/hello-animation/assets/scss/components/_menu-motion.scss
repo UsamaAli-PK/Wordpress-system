@@ -1,0 +1,143 @@
+/*----------------------------------------*/
+/*  MENU MOTION (body.ha-motion-menu)
+/*----------------------------------------*/
+
+/*
+ * Customizer > Animations > Animate Menu. Nothing here applies until that body
+ * class is on, and the movement all sits behind prefers-reduced-motion.
+ *
+ * CSS owns it because it is either the first screen — which paints before
+ * script.js has run — or driven by state (hover, focus, the offcanvas being
+ * open), which is exactly what CSS is for. Entrances use the shared `ha-rise`
+ * keyframe (utils/_animation.scss): a negative --ha-rise makes it drop in from
+ * above instead of rising.
+ */
+
+// The hover underline is part of the look, not the movement: it is there for
+// everyone, and only its sweep is animated (below).
+.ha-motion-menu .header__nav .main-menu>ul>li>a .ha-nav-link {
+  padding-bottom: 3px;
+  margin-bottom: -3px;
+  background: linear-gradient(var(--primary), var(--primary)) no-repeat left bottom / 0 2px;
+}
+
+.ha-motion-menu .header__nav .main-menu>ul>li:hover>a .ha-nav-link,
+.ha-motion-menu .header__nav .main-menu>ul>li:focus-within>a .ha-nav-link,
+.ha-motion-menu .header__nav .main-menu>ul>li>a.active .ha-nav-link {
+  background-size: 100% 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ha-motion-menu {
+
+    // ---- Load: logo, then the top-level items one after another, then the
+    // button and the menu toggle.
+    .header__logo {
+      --ha-rise: -12px;
+      animation: ha-rise var(--ha-dur) var(--ha-ease) backwards;
+    }
+
+    .header__nav .main-menu>ul>li {
+      --ha-rise: -12px;
+      @include ha-enter(10, 120ms);
+    }
+
+    .header__nav-icon {
+      --ha-rise: -12px;
+      animation: ha-rise var(--ha-dur) var(--ha-ease) 480ms backwards;
+    }
+
+    // ---- Hover: the underline sweeps in from the start of the line (rtlcss
+    // flips `left` for RTL).
+    .header__nav .main-menu>ul>li>a .ha-nav-link {
+      transition: background-size .45s var(--ha-ease);
+    }
+
+    // ---- Desktop dropdowns: slide up as they fade in, and their items follow
+    // one by one. The panel already faded with a transition on opacity and visibility; this adds
+    // the travel and a better curve. Nested panels share the item stagger.
+    @media (min-width: 1200px) {
+      .header__nav .main-menu .dp-menu {
+        transform: translate3d(0, 14px, 0);
+        transition: opacity .4s ease, visibility .4s ease, transform .55s var(--ha-ease);
+      }
+
+      .header__nav .main-menu>ul>li:hover>.dp-menu,
+      .header__nav .main-menu>ul>li:focus-within>.dp-menu {
+        transform: none;
+      }
+
+      // Nested panels already open with `transform: none !important`
+      // (_menu.scss); this is only their closed position.
+      .header__nav .main-menu .dp-menu .dp-menu {
+        transform: translate3d(0, 10px, 0);
+      }
+
+      .header__nav .main-menu li:hover>.dp-menu>li,
+      .header__nav .main-menu li:focus-within>.dp-menu>li {
+        --ha-rise: 10px;
+        animation: ha-rise 450ms var(--ha-ease) backwards;
+
+        @for $i from 1 through 8 {
+          &:nth-child(#{$i}) {
+            animation-delay: calc(var(--ha-step) * #{$i - 1} * .6 + 60ms);
+          }
+        }
+      }
+    }
+
+    // ---- Mobile menu: when the panel opens (script.js adds .show) its logo,
+    // items and gallery come in behind it.
+    .hello-animation-offcanvas.show {
+
+      .offcanvas__logo,
+      .offcanvas__gallery {
+        --ha-rise: 16px;
+        animation: ha-rise var(--ha-dur) var(--ha-ease) 200ms backwards;
+      }
+
+      .hello-animation-mb-menu-items>li {
+        --ha-rise: 16px;
+        @include ha-enter(10, 220ms);
+        animation-duration: 600ms;
+      }
+    }
+  }
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .ha-motion-split {
+    // Hover: split text (Customizer > Animations > Split-Text Menu Hover, body.ha-motion-split). script.js cuts a top-level label into letters
+    // (.ha-ch); each one rolls up and its copy (data-c, drawn by ::after) rolls
+    // in from below, a letter after the last. The wrapper clips to one line, and
+    // the underline above lives on the label outside it, so it is not clipped.
+    @media (min-width: 1200px) {
+      .header__nav .main-menu>ul>li>a .ha-split {
+        display: inline-flex;
+        overflow: hidden;
+        vertical-align: top;
+        white-space: pre;
+      }
+
+      .header__nav .main-menu>ul>li>a .ha-ch {
+        position: relative;
+        display: inline-block;
+        transition: transform .5s var(--ha-ease);
+        transition-delay: calc(var(--i) * 22ms);
+
+        &::after {
+          content: attr(data-c);
+          position: absolute;
+          inset-inline-start: 0;
+          top: 100%;
+        }
+      }
+
+      .header__nav .main-menu>ul>li:hover>a .ha-ch,
+      .header__nav .main-menu>ul>li:focus-within>a .ha-ch {
+        transform: translate3d(0, -100%, 0);
+      }
+    }
+  }
+}

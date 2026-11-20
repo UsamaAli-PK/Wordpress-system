@@ -1,0 +1,63 @@
+/*----------------------------------------*/
+/*  BLOG MOTION (body.ha-motion-content)
+/*----------------------------------------*/
+
+/*
+ * Customizer > Animations > Animate Blog and Content. See utils/_motion.scss for
+ * who animates what.
+ *
+ * This file is the FIRST SCREEN only: the first few cards, widgets and blocks,
+ * which have to paint in their entrance before script.js has run. Everything
+ * further down the page is revealed by script.js as it scrolls into view — it
+ * skips anything that already has an animation from here, so the two never
+ * touch the same element.
+ *
+ * The theme animates its own templates, never what Elementor draws: every
+ * selector keeps clear of `.elementor`, so a page built with Elementor (and the
+ * GSAP animations of the plugins that add to it) is left entirely alone.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  .ha-motion-content {
+
+    // Blog and archive cards. Pages are excluded: they are rendered by the
+    // same wrapper but hold builder content.
+    // Six, so a first row of a grid of three or four columns, and the start of
+    // the second, all stagger in.
+    .default-blog__item-content:not(.builder--page-details)>.default-blog__item-single {
+      @include ha-enter(6, 150ms);
+    }
+
+    // Inside a card: meta, title, excerpt and button follow the card in, a
+    // little lighter than the card itself. Cards below the fold get the same
+    // from script.js.
+    .default-blog__item-content:not(.builder--page-details) .default-blog__content> * {
+      --ha-rise: 14px;
+      @include ha-enter(4, 350ms);
+    }
+
+    // Sidebar widgets.
+    .default-sidebar__wrapper>.widget {
+      @include ha-enter(4, 250ms);
+    }
+
+    // A single post: meta, featured image, title — then the content blocks,
+    // headings travelling a little further than paragraphs.
+    .post-single> :not(.info--post-details) {
+      @include ha-enter(3, 100ms);
+    }
+
+    .post-single .info--post-details> :not(.elementor) {
+      @include ha-enter(6, 550ms);
+    }
+
+    .post-single .info--post-details> :is(h1, h2, h3, h4, h5, h6) {
+      --ha-rise: 38px;
+    }
+
+    // Plain (non-Elementor) pages: title, image, then the blocks.
+    .builder--page-details>article> :not(.elementor) {
+      @include ha-enter(6, 150ms);
+    }
+  }
+}
