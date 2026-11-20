@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-define('BASE_CLASSIC_VERSION', '1.0.0');
+define('BASE_CLASSIC_VERSION', '1.1.0');
 define('BASE_CLASSIC_DIR', get_template_directory());
 define('BASE_CLASSIC_URI', get_template_directory_uri());
 
@@ -71,11 +71,19 @@ add_action('elementor/theme/register_locations', __NAMESPACE__ . '\\register_ele
  */
 function enqueue_scripts(): void
 {
+    // Editorial display serif + humanist sans — Google Fonts, loaded first.
+    wp_enqueue_style(
+        'base-classic-fonts',
+        'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap',
+        [],
+        null
+    );
+
     // Design tokens & CSS custom property bridge.
     wp_enqueue_style(
         'base-classic-variables',
         BASE_CLASSIC_URI . '/assets/css/theme-variables.css',
-        [],
+        ['base-classic-fonts'],
         BASE_CLASSIC_VERSION
     );
 
@@ -88,3 +96,13 @@ function enqueue_scripts(): void
     );
 }
 add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_scripts');
+
+/**
+ * Preconnect to Google Fonts — avoids 300ms font-swap on first paint.
+ */
+function preconnect_fonts(): void
+{
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+}
+add_action('wp_head', __NAMESPACE__ . '\\preconnect_fonts', 1);

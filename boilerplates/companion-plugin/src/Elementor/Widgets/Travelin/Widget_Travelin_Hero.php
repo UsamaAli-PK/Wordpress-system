@@ -198,47 +198,44 @@ class Widget_Travelin_Hero extends Widget_Base
         $target = !empty($settings['btn_url']['is_external']) ? ' target="_blank" rel="noopener noreferrer"' : '';
         ?>
         <section id="home" class="travelin-hero travelin-scope" aria-label="Your journey starts here">
-            <div class="travelin-hero__scene">
-                <?php if (!empty($video_url)) : ?>
-                    <video class="travelin-hero__film" autoplay loop muted playsinline preload="auto" poster="<?php echo $poster_url; ?>" aria-hidden="true">
-                        <source src="<?php echo $video_url; ?>" type="video/mp4">
-                    </video>
-                <?php endif; ?>
-                <div class="travelin-hero__shade"></div>
-            </div>
+            <div class="travelin-hero__sticky">
+                <div class="travelin-hero__scene">
+                    <?php if (!empty($video_url)) : ?>
+                        <video class="travelin-hero__film" muted playsinline webkit-playsinline="true" preload="auto" poster="<?php echo $poster_url; ?>" aria-hidden="true">
+                            <source src="<?php echo $video_url; ?>" type="video/mp4">
+                        </video>
+                    <?php endif; ?>
+                    <div class="travelin-hero__shade"></div>
+                </div>
 
-            <div class="travelin-hero__copy">
-                <h1 class="travelin-hero__title">
-                    <?php if (!empty($settings['title_line_1'])) : ?>
-                        <span class="travelin-hero__line-mask">
-                            <span class="travelin-hero__line"><?php echo esc_html($settings['title_line_1']); ?></span>
-                        </span>
-                    <?php endif; ?>
-                    <?php if (!empty($settings['title_line_2'])) : ?>
-                        <span class="travelin-hero__line-mask">
-                            <span class="travelin-hero__line"><?php echo esc_html($settings['title_line_2']); ?></span>
-                        </span>
-                    <?php endif; ?>
-                    <?php if (!empty($settings['title_line_3_italic'])) : ?>
-                        <span class="travelin-hero__line-mask">
-                            <em class="travelin-hero__line"><?php echo esc_html($settings['title_line_3_italic']); ?></em>
-                        </span>
-                    <?php endif; ?>
-                </h1>
+                <div class="travelin-hero__copy travelin-hero__title-box">
+                    <h1 class="travelin-hero__title">
+                        <?php if (!empty($settings['title_line_1'])) : ?>
+                            <span class="travelin-hero__line-mask"><span class="travelin-hero__line"><?php echo esc_html($settings['title_line_1']); ?></span></span>
+                        <?php endif; ?>
+                        <?php if (!empty($settings['title_line_2'])) : ?>
+                            <span class="travelin-hero__line-mask"><span class="travelin-hero__line"><?php echo esc_html($settings['title_line_2']); ?></span></span>
+                        <?php endif; ?>
+                        <?php if (!empty($settings['title_line_3_italic'])) : ?>
+                            <span class="travelin-hero__line-mask"><em class="travelin-hero__line"><?php echo esc_html($settings['title_line_3_italic']); ?></em></span>
+                        <?php endif; ?>
+                    </h1>
+                </div>
 
                 <?php if (!empty($settings['intro_lead'])) : ?>
-                    <p class="travelin-hero__lead">
-                        <?php echo nl2br(esc_html($settings['intro_lead'])); ?>
-                    </p>
+                    <div class="travelin-hero__copy travelin-hero__intro-box">
+                        <p class="travelin-hero__lead">
+                            <?php echo nl2br(esc_html($settings['intro_lead'])); ?>
+                        </p>
+                    </div>
                 <?php endif; ?>
 
-                <div class="travelin-hero__action">
+                <div class="travelin-hero__copy travelin-hero__action-box">
                     <?php if (!empty($settings['action_lead'])) : ?>
                         <h2 class="travelin-hero__action-lead">
                             <?php echo nl2br(esc_html($settings['action_lead'])); ?>
                         </h2>
                     <?php endif; ?>
-
                     <div class="travelin-hero__cta-box">
                         <a href="<?php echo $btn_url; ?>" class="travelin-button"<?php echo $target; ?>>
                             <?php echo esc_html($settings['btn_text']); ?>
@@ -249,13 +246,13 @@ class Widget_Travelin_Hero extends Widget_Base
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
 
-            <?php if ('yes' === $settings['enable_clouds']) : ?>
-                <div class="travelin-hero__clouds" aria-hidden="true">
-                    <div class="travelin-cloud-floor"></div>
-                </div>
-            <?php endif; ?>
+                <?php if ('yes' === $settings['enable_clouds']) : ?>
+                    <div class="travelin-hero__clouds" aria-hidden="true">
+                        <div class="travelin-cloud-floor"></div>
+                    </div>
+                <?php endif; ?>
+            </div><!-- /.travelin-hero__sticky -->
         </section>
         <?php
     }

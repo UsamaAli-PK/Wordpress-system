@@ -1,8 +1,9 @@
 /**
- * Theme Design Tokens & Elementor Kit Bridge
+ * Theme Design Tokens — Travel & LIV Collective brand defaults.
  *
- * Defaults apply if Elementor is inactive. If Elementor Kit is active,
- * CSS custom properties seamlessly inherit Elementor global tokens.
+ * All tokens resolve to editorial Travel & LIV values first, and inherit
+ * from Elementor Kit globals only when a kit value is explicitly set.
+ * Order: Elementor-Kit value → Travel & LIV default → safe system fallback.
  */
 :root {
     /* Layout */
@@ -13,20 +14,76 @@
     --base-spacing-lg: 2.5rem;
     --base-spacing-xl: 4rem;
 
-    /* Color Palette — Native fallbacks with Elementor Kit overrides */
-    --base-primary-color: var(--e-global-color-primary, #2563eb);
-    --base-primary-hover: #1d4ed8;
-    --base-secondary-color: var(--e-global-color-secondary, #475569);
-    --base-text-color: var(--e-global-color-text, #1f2937);
-    --base-accent-color: var(--e-global-color-accent, #f59e0b);
-    --base-bg-color: #ffffff;
-    --base-surface-color: #f8fafc;
-    --base-border-color: #e2e8f0;
+    /* Travel & LIV brand palette */
+    --tl-bg:          #f7f8f4;   /* warm bone */
+    --tl-text:        #263c32;   /* deep forest */
+    --tl-muted:       #657268;   /* olive-slate */
+    --tl-accent:      #ced6c1;   /* sage */
+    --tl-ring:        #7a8a6d;   /* olive */
+    --tl-card:        #f7f8f4;
+    --tl-surface:     #e7e8df;   /* muted bone */
+    --tl-border:      rgba(38, 60, 50, 0.15);
+    --tl-primary-fg:  #f5f3ed;   /* cream for dark bg */
 
-    /* Typography */
-    --base-font-family: var(--e-global-typography-primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    /* Elementor bridge — Kit values take precedence when set */
+    --base-primary-color:   var(--e-global-color-primary,   var(--tl-text));
+    --base-primary-hover:   var(--e-global-color-primary,   var(--tl-ring));
+    --base-secondary-color: var(--e-global-color-secondary, var(--tl-muted));
+    --base-text-color:      var(--e-global-color-text,      var(--tl-text));
+    --base-accent-color:    var(--e-global-color-accent,    var(--tl-accent));
+    --base-bg-color:        var(--tl-bg);
+    --base-surface-color:   var(--tl-surface);
+    --base-border-color:    var(--tl-border);
+
+    /* Typography — editorial serif display + humanist sans body */
+    --tl-serif: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+    --tl-sans:  "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --base-font-family:    var(--e-global-typography-primary-font-family,   var(--tl-sans));
+    --base-heading-family: var(--e-global-typography-secondary-font-family, var(--tl-serif));
     --base-font-size: 1rem;
-    --base-line-height: 1.6;
-    --base-heading-family: var(--e-global-typography-secondary-font-family, var(--base-font-family));
-    --base-heading-weight: 700;
+    --base-line-height: 1.625;
+    --base-heading-weight: 500;
+    --base-tracking-widest: 0.1em;
+
+    /* Geometry */
+    --base-radius: 0;
+}
+
+/* Apply tokens globally */
+body,
+.elementor-widget-container {
+    background-color: var(--base-bg-color);
+    color: var(--base-text-color);
+    font-family: var(--base-font-family);
+    line-height: var(--base-line-height);
+}
+
+h1, h2, h3, h4, h5, h6,
+.elementor-heading-title {
+    font-family: var(--base-heading-family);
+    font-weight: var(--base-heading-weight);
+    color: var(--base-text-color);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+}
+
+h1, h2 { font-weight: 400; }
+em    { font-style: italic; }
+
+/* Kill rounded corners sitewide — editorial sharp geometry */
+.elementor-button,
+.elementor-widget-button .elementor-button,
+input[type="submit"],
+button {
+    border-radius: var(--base-radius);
+}
+
+/* Eyebrow pattern used across the brand */
+.tl-eyebrow {
+    font-family: var(--tl-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--base-tracking-widest);
+    color: var(--tl-muted);
 }

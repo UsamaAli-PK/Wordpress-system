@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-define('AGENCY_COMPANION_VERSION', '1.0.0');
+define('AGENCY_COMPANION_VERSION', '1.1.0');
 define('AGENCY_COMPANION_FILE', __FILE__);
 define('AGENCY_COMPANION_DIR', plugin_dir_path(__FILE__));
 define('AGENCY_COMPANION_URL', plugin_dir_url(__FILE__));

@@ -7,6 +7,96 @@
     'use strict';
 
     // -------------------------------------------------------------------------
+    // 0. Lenis smooth scroll — kick off once per page.
+    // -------------------------------------------------------------------------
+    function initLenis() {
+        if (window.__tlLenis || typeof window.Lenis !== 'function') return;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) return;
+        const lenis = new window.Lenis({
+            duration: 1.65,
+            smoothWheel: true,
+            touchMultiplier: 1,
+            syncTouch: false,
+            easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); }
+        });
+        window.__tlLenis = lenis;
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+        document.documentElement.classList.add('tl-lenis-active');
+    }
+
+    // -------------------------------------------------------------------------
+    // Hero — scroll-linked video playback (scrub through door-journey clip)
+    // -------------------------------------------------------------------------
+    function initHeroScrubVideo($scope) {
+        const scope = $scope[0] || document;
+        const section = scope.classList && scope.classList.contains('travelin-hero')
+            ? scope
+            : scope.querySelector('.travelin-hero');
+        if (!section) return;
+        const video = section.querySelector('.travelin-hero__film');
+        if (!video) return;
+
+        video.autoplay = false;
+        video.loop = false;
+        video.pause();
+
+        let duration = 4.75; // sensible default; replaced on loadedmetadata
+        let wanted = 0;
+        let lastSeek = 0;
+        video.addEventListener('loadedmetadata', function () {
+            duration = Math.max(duration, video.duration || duration);
+        });
+
+        // Unlock video decoding on first user interaction (mobile Safari)
+        let unlocked = false;
+        function unlock() {
+            if (unlocked) return;
+            unlocked = true;
+            const p = video.play();
+            if (p && p.then) p.then(function () { video.pause(); }).catch(function () {});
+        }
+        ['touchstart', 'pointerdown', 'scroll'].forEach(function (evt) {
+            window.addEventListener(evt, unlock, { passive: true, once: true });
+        });
+
+        function seek(t) {
+            const max = Math.max(0, duration - 0.15);
+            const target = Math.max(0, Math.min(t, max));
+            if (Math.abs(video.currentTime - target) < 0.04) return;
+            const now = performance.now();
+            if (video.seeking && now - lastSeek < 160) return;
+            lastSeek = now;
+            if (typeof video.fastSeek === 'function') {
+                try { video.fastSeek(target); return; } catch (e) {}
+            }
+            video.currentTime = target;
+        }
+
+        function onScroll() {
+            const rect = section.getBoundingClientRect();
+            const scrollable = section.offsetHeight - window.innerHeight;
+            const progressed = -rect.top;
+            let progress = progressed / Math.max(1, scrollable);
+            if (progress < 0) progress = 0;
+            if (progress > 1) progress = 1;
+            wanted = progress * duration;
+            seek(wanted);
+            section.style.setProperty('--hero-progress', progress.toFixed(3));
+        }
+
+        let rafId = 0;
+        function schedule() {
+            if (rafId) return;
+            rafId = requestAnimationFrame(function () { rafId = 0; onScroll(); });
+        }
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule);
+        schedule();
+    }
+
+    // -------------------------------------------------------------------------
     // 1. Trips Destination Tabs & Carousel
     // -------------------------------------------------------------------------
     function initTripsCarousel($scope) {
@@ -268,8 +358,10 @@
     $(window).on('elementor/frontend/init', function () {
         if (!window.elementorFrontend) return;
 
+        initLenis();
+
         elementorFrontend.hooks.addAction('frontend/element_ready/travelin-hero.default', function ($scope) {
-            // Hero atmosphere & video check
+            initHeroScrubVideo($scope);
         });
 
         elementorFrontend.hooks.addAction('frontend/element_ready/travelin-trips-carousel.default', function ($scope) {
@@ -295,6 +387,8 @@
 
     // Fallback document ready initialization for non-Elementor preview or standard page renders
     $(document).ready(function () {
+        initLenis();
+        initHeroScrubVideo($('body'));
         initTripsCarousel($('body'));
         initExperienceVideo($('body'));
         initStoryReels($('body'));

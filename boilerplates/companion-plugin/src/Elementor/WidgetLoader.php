@@ -42,10 +42,19 @@ final class WidgetLoader
             $version
         );
 
+        // Lenis smooth-scroll engine (vendor, ~17KB)
+        wp_register_script(
+            'tl-lenis',
+            $base_url . 'assets/js/vendor/lenis.min.js',
+            [],
+            '1.3.14',
+            true
+        );
+
         wp_register_script(
             'travelin-frontend-js',
             $base_url . 'assets/js/travelin/travelin-frontend.js',
-            ['jquery'],
+            ['jquery', 'tl-lenis'],
             $version,
             true
         );
