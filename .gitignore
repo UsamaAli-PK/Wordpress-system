@@ -1,0 +1,26 @@
+# MCP & Environment Secrets
+.mcp.json
+*.env
+*.env.*
+!.env.example
+
+# Credentials & Passwords
+*.key
+*.pem
+application-passwords.txt
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Database dumps & Logs
+*.sql
+*.sql.gz
+*.log
+debug.log
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
