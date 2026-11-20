@@ -21,7 +21,13 @@ A Markdown-only knowledge base for WordPress + Elementor development. There is n
 
 - **Local rules beat upstream skills.** The stack is a Classic PHP theme (`header.php`, `footer.php`, `singular.php`, `archive.php`) plus Elementor Theme Locations, `Widget_Base` companion widgets, and Flexbox/Grid containers. Block themes, FSE, `theme.json`, and Gutenberg-only layouts are excluded. `INDEX.md` marks `wp-block-development`, `wp-block-themes`, `wp-interactivity-api`, and `wpds` as **Skip**. Skills it marks Recommended (`wp-plugin-development`, `wp-wpcli-and-ops`, `wp-rest-api`, `wordpress-router`, `wp-project-triage`, and others) are fine to use.
 - **Draft-first:** content written through MCP tools uses `post_status: 'draft'` until a human verifies it.
-- **Secrets:** never commit `.mcp.json`, `.env*`, API keys, or application passwords. `.gitignore` must keep covering `.mcp.json`, `*.env`, `*.env.*` (except `.env.example`), `*.key`, `*.pem`, and `application-passwords.txt`. Application passwords are scoped to one agent or workflow with minimal capabilities.
+- **Secrets & Git Operations:**
+  - Never commit `.mcp.json`, `.env*`, API keys, or application passwords. `.gitignore` must keep covering `.mcp.json`, `*.env`, `*.env.*` (except `.env.example`), `*.key`, `*.pem`, and `application-passwords.txt`.
+  - **Remote Repository:** `https://github.com/UsamaAli-PK/Wordpress-system.git`
+  - **Commit Author & Committer (Strict):**
+    - Name / Username: `UsamaAli-PK`
+    - Email: `uali24272@gmail.com`
+  - **GitHub Token Storage:** Fine-grained repository access token is strictly stored in `/root/Desktop/learn/.env` (`GITHU_TOKEN`). It must NEVER be committed or logged to Git. All push operations must source credentials externally.
 
 ## Conventions the docs and playbooks enforce
 

@@ -14,6 +14,19 @@ Master routing table for documentation, standards, playbooks, and templates.
 
 ---
 
+## 00. Git Repository & Committer Standards
+
+- **Remote URL:** `https://github.com/UsamaAli-PK/Wordpress-system.git`
+- **Default Branch:** `master`
+- **Strict Committer / Author Identity:**
+  - Username: `UsamaAli-PK`
+  - Email: `uali24272@gmail.com`
+- **Security & Token Isolation:**
+  - GitHub fine-grained repository token is stored externally in `/root/Desktop/learn/.env` (`GITHU_TOKEN`).
+  - **Invariant:** Never commit or expose `.env` or tokens in Git (enforced by [.gitignore](file:///root/Desktop/learn/BAse/.gitignore)).
+
+---
+
 ## 01. Rules & Boundaries (`rules/`)
 
 - [architecture-and-boundaries.md](file:///root/Desktop/learn/BAse/rules/architecture-and-boundaries.md) — Precedence rule (Classic PHP + Elementor override upstream Block/FSE recommendations) and Git/credential safety boundaries.
