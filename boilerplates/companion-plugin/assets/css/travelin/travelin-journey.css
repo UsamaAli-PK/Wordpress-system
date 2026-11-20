@@ -1,0 +1,970 @@
+/**
+ * Travelin' Website Journey & Section Styles (Scoped for Elementor)
+ */
+
+/* Theme Variables & Font Tokens */
+.travelin-scope {
+    --travelin-bg: #f7f8f4;
+    --travelin-foreground: #263c32;
+    --travelin-muted: #69756c;
+    --travelin-card: #f7f8f4;
+    --travelin-serif: "Playfair Display", Georgia, serif;
+    --travelin-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--travelin-bg);
+    color: var(--travelin-foreground);
+    font-family: var(--travelin-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Utilities */
+.travelin-editorial-label {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--travelin-muted);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.travelin-serif-heading {
+    font-family: var(--travelin-serif);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 1. HERO SECTION                                                            */
+/* -------------------------------------------------------------------------- */
+.travelin-hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #a3c4d6;
+    overflow: hidden;
+    padding: 120px 7% 140px;
+}
+
+.travelin-hero__scene {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.travelin-hero__film {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.travelin-hero__shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(22, 62, 81, 0.45), transparent 70%),
+                linear-gradient(0deg, rgba(22, 62, 81, 0.35), transparent 45%);
+}
+
+.travelin-hero__content {
+    position: relative;
+    z-index: 3;
+    max-width: 580px;
+}
+
+.travelin-hero__title {
+    font-family: var(--travelin-serif);
+    font-size: clamp(34px, 4.2vw, 56px);
+    line-height: 1.12;
+    color: #ffffff;
+    margin: 0 0 1.5rem;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
+}
+
+.travelin-hero__title em {
+    font-style: italic;
+}
+
+.travelin-hero__lead {
+    font-size: clamp(16px, 1.3vw, 19px);
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 2rem;
+    max-width: 480px;
+}
+
+.travelin-hero__action-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.travelin-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background-color: #ffffff;
+    color: #163e51;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 16px 36px;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.travelin-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background-color: #f7f8f4;
+    color: #163e51;
+}
+
+.travelin-hero__note {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+    letter-spacing: 0.05em;
+}
+
+/* Hero Atmospheric Clouds */
+.travelin-hero__clouds {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.travelin-hero__clouds img {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    min-width: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+}
+
+.travelin-hero__cloud-back {
+    height: 100%;
+    opacity: 0.95;
+}
+
+.travelin-hero__cloud-front {
+    height: 80%;
+}
+
+.travelin-hero__cloud-floor {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 35%;
+    background: linear-gradient(transparent, #f7f8f4 85%);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 2. PILLARS / VALUES SECTION                                                */
+/* -------------------------------------------------------------------------- */
+.travelin-pillars {
+    background-color: var(--travelin-bg);
+    padding: 120px 7%;
+}
+
+.travelin-pillars__header {
+    max-width: 720px;
+    margin-bottom: 80px;
+}
+
+.travelin-pillars__header h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(36px, 3.8vw, 54px);
+    line-height: 1.15;
+    margin: 0 0 1.5rem;
+}
+
+.travelin-pillars__header h2 em {
+    font-style: italic;
+}
+
+.travelin-pillars__header p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--travelin-muted);
+    margin: 0;
+}
+
+.travelin-pillar-card {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 5%;
+    align-items: center;
+    margin-bottom: 100px;
+}
+
+.travelin-pillar-card:nth-child(even) {
+    grid-template-columns: 1.4fr 1fr;
+}
+
+.travelin-pillar-card:nth-child(even) .travelin-pillar-card__copy {
+    order: 2;
+}
+
+.travelin-pillar-card:nth-child(even) .travelin-pillar-card__gallery {
+    order: 1;
+}
+
+.travelin-pillar-card__copy h3 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(28px, 2.5vw, 38px);
+    line-height: 1.2;
+    margin: 0 0 1rem;
+}
+
+.travelin-pillar-card__copy h3 em {
+    font-style: italic;
+}
+
+.travelin-pillar-card__copy p {
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--travelin-muted);
+}
+
+.travelin-pillar-card__gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.travelin-pillar-card__photo {
+    border-radius: 6px;
+    overflow: hidden;
+    aspect-ratio: 4/5;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transition: transform 0.4s ease;
+}
+
+.travelin-pillar-card__photo:hover {
+    transform: translateY(-4px) scale(1.02);
+}
+
+.travelin-pillar-card__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 3. TRIPS CAROUSEL / DESTINATION SELECTOR                                   */
+/* -------------------------------------------------------------------------- */
+.travelin-trips {
+    background-color: var(--travelin-bg);
+    padding: 100px 7%;
+}
+
+.travelin-trips__tabs {
+    display: flex;
+    gap: 32px;
+    border-bottom: 1px solid rgba(38, 60, 50, 0.12);
+    margin-bottom: 48px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+}
+
+.travelin-trips__tab-btn {
+    background: none;
+    border: none;
+    font-family: var(--travelin-serif);
+    font-size: clamp(20px, 2vw, 28px);
+    color: rgba(38, 60, 50, 0.4);
+    cursor: pointer;
+    padding: 0 0 8px;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+}
+
+.travelin-trips__tab-btn.is-active,
+.travelin-trips__tab-btn:hover {
+    color: var(--travelin-foreground);
+    border-bottom: 2px solid var(--travelin-foreground);
+}
+
+.travelin-trip-card {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 6%;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.travelin-trip-card__image-wrap {
+    position: relative;
+    min-height: 440px;
+}
+
+.travelin-trip-card__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.travelin-trip-card__content {
+    padding: 48px 48px 48px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.travelin-trip-card__destination {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--travelin-muted);
+    margin-bottom: 0.5rem;
+}
+
+.travelin-trip-card__title {
+    font-family: var(--travelin-serif);
+    font-size: clamp(28px, 2.6vw, 42px);
+    line-height: 1.15;
+    margin: 0 0 1.5rem;
+}
+
+.travelin-trip-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    font-size: 14px;
+    color: var(--travelin-muted);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(38, 60, 50, 0.1);
+}
+
+.travelin-trip-card__price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.travelin-trip-card__price strong {
+    font-size: 24px;
+    color: var(--travelin-foreground);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4. HOST BIO SECTION (OLIVIA OWEN)                                          */
+/* -------------------------------------------------------------------------- */
+.travelin-host {
+    background-color: var(--travelin-bg);
+    padding: 120px 7%;
+}
+
+.travelin-host__inner {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 8%;
+    align-items: center;
+    max-width: 1160px;
+    margin: 0 auto;
+}
+
+.travelin-host__photo-wrap {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.1);
+}
+
+.travelin-host__photo-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.travelin-host__caption {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: #ffffff;
+    font-size: 14px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+    margin: 0;
+}
+
+.travelin-host__copy h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(34px, 3.5vw, 52px);
+    line-height: 1.15;
+    margin: 0 0 1.5rem;
+}
+
+.travelin-host__copy h2 em {
+    font-style: italic;
+}
+
+.travelin-host__copy p {
+    font-size: 15px;
+    line-height: 1.85;
+    color: var(--travelin-muted);
+    margin-bottom: 1.5rem;
+}
+
+.travelin-host__signature {
+    font-family: var(--travelin-serif);
+    font-style: italic;
+    font-size: 20px;
+    color: var(--travelin-foreground);
+    margin: 2rem 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 5. FAQ ACCORDION                                                           */
+/* -------------------------------------------------------------------------- */
+.travelin-faq {
+    background-color: var(--travelin-bg);
+    padding: 120px 7%;
+}
+
+.travelin-faq__inner {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 8%;
+    max-width: 1160px;
+    margin: 0 auto;
+}
+
+.travelin-faq__title h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(36px, 3.8vw, 54px);
+    line-height: 1.15;
+}
+
+.travelin-faq__item {
+    border-bottom: 1px solid rgba(38, 60, 50, 0.15);
+    padding: 24px 0;
+}
+
+.travelin-faq__question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    font-family: var(--travelin-serif);
+    font-size: clamp(20px, 1.8vw, 24px);
+    color: var(--travelin-foreground);
+    cursor: pointer;
+    padding: 0;
+}
+
+.travelin-faq__answer {
+    padding-top: 14px;
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--travelin-muted);
+    display: none;
+}
+
+.travelin-faq__item.is-open .travelin-faq__answer {
+    display: block;
+}
+
+.travelin-faq__icon {
+    font-size: 20px;
+    transition: transform 0.2s ease;
+}
+
+.travelin-faq__item.is-open .travelin-faq__icon {
+    transform: rotate(45deg);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 6. FINAL CTA BANNER                                                        */
+/* -------------------------------------------------------------------------- */
+.travelin-final-cta {
+    background-color: #1f372d;
+    color: #ffffff;
+    text-align: center;
+    padding: 140px 7%;
+    position: relative;
+    overflow: hidden;
+}
+
+.travelin-final-cta h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(38px, 4.5vw, 68px);
+    line-height: 1.15;
+    margin: 0 0 1.5rem;
+}
+
+.travelin-final-cta h2 em {
+    font-style: italic;
+    color: #e2ede5;
+}
+
+.travelin-final-cta p {
+    font-size: 16px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+}
+
+.travelin-final-cta .travelin-button {
+    background-color: #ffffff;
+    color: #1f372d;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 7. EXPERIENCE FILM ("You had to be there" Interactive Video)               */
+/* -------------------------------------------------------------------------- */
+.travelin-experience-film {
+    position: relative;
+    min-height: 80vh;
+    background-color: #263c32;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.film-frame {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    overflow: hidden;
+    background: #263c32;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.film-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    z-index: 1;
+}
+
+.film-shade {
+    position: absolute;
+    inset: 0;
+    background: rgba(19, 45, 38, 0.45);
+    z-index: 2;
+    transition: opacity 0.5s ease;
+}
+
+.film-watching .film-shade {
+    opacity: 0.15;
+}
+
+.film-copy {
+    position: relative;
+    z-index: 4;
+    text-align: center;
+    color: #ffffff;
+    padding: 40px 20px;
+}
+
+.film-headings {
+    transition: opacity 0.45s ease;
+}
+
+.film-watching .film-headings {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.film-copy .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #cbdcbb;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.film-copy h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(44px, 5.5vw, 84px);
+    line-height: 1.08;
+    margin: 0 0 28px;
+    font-weight: 400;
+}
+
+.film-copy h2 em {
+    font-style: italic;
+    color: #f7f8f4;
+}
+
+.film-play {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+}
+
+.film-play > span {
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.3s ease, transform 0.25s ease;
+}
+
+.film-play:hover > span {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.08);
+}
+
+.ambient-control {
+    position: absolute;
+    right: 32px;
+    bottom: 32px;
+    z-index: 5;
+    background: rgba(22, 53, 40, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    height: 44px;
+    width: 44px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.ambient-control:hover {
+    background: rgba(22, 53, 40, 0.85);
+    transform: scale(1.08);
+}
+
+.film-clouds {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.film-clouds img {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    min-width: 100%;
+    transform: translateX(-50%);
+    object-fit: cover;
+    object-position: center bottom;
+}
+
+.film-cloud-back {
+    height: 100%;
+    opacity: 0.95;
+}
+
+.film-cloud-front {
+    height: 75%;
+}
+
+.film-cloud-floor {
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(transparent, var(--travelin-bg) 70%);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 8. STORIES / REELS ("Who's coming with you?" 3-Video Strip)                */
+/* -------------------------------------------------------------------------- */
+.travelin-stories {
+    background-color: #edf0e9;
+    padding: 100px 7%;
+}
+
+.travelin-stories__header {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 7%;
+    max-width: 1320px;
+    margin: 0 auto 60px;
+    align-items: start;
+}
+
+.travelin-stories__title {
+    font-family: var(--travelin-serif);
+    font-size: clamp(38px, 4vw, 56px);
+    line-height: 1.1;
+    margin: 0;
+}
+
+.travelin-stories__title em {
+    font-style: italic;
+    color: #3b5645;
+}
+
+.travelin-stories__lead p {
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: #556658;
+    margin: 0 0 16px;
+    max-width: 580px;
+}
+
+.travelin-stories__cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+.travelin-story-card {
+    position: relative;
+    aspect-ratio: 0.72;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #263c32;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(38, 60, 50, 0.08);
+}
+
+.travelin-story-card__video-wrap {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: transform 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.travelin-story-card:hover .travelin-story-card__video-wrap {
+    transform: scale(1.045);
+}
+
+.travelin-story-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.travelin-story-sound-toggle {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 4;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(18, 47, 67, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.travelin-story-sound-toggle:hover,
+.travelin-story-sound-toggle.is-active {
+    background: rgba(18, 47, 67, 0.95);
+    transform: scale(1.1);
+}
+
+/* -------------------------------------------------------------------------- */
+/* 9. MOMENTS STRIP / COLLAGE SECTION                                         */
+/* -------------------------------------------------------------------------- */
+.travelin-moments {
+    background: var(--travelin-bg);
+    padding: 120px 7%;
+    overflow: hidden;
+}
+
+.travelin-moments__title {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 50px;
+}
+
+.travelin-moments__title h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(38px, 4.2vw, 62px);
+    line-height: 1.1;
+    margin: 0;
+}
+
+.travelin-moments__title h2 em {
+    font-style: italic;
+    color: #435e4e;
+}
+
+.travelin-moments__grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 90px;
+    gap: 16px;
+    max-width: 1320px;
+    margin: 0 auto;
+}
+
+.travelin-moment-item {
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(38, 60, 50, 0.06);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.travelin-moment-item:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 36px rgba(38, 60, 50, 0.12);
+    z-index: 2;
+}
+
+.travelin-moment-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.travelin-moment-0 { grid-column: span 5; grid-row: span 4; }
+.travelin-moment-1 { grid-column: span 4; grid-row: span 3; }
+.travelin-moment-2 { grid-column: span 3; grid-row: span 3; }
+.travelin-moment-3 { grid-column: span 4; grid-row: span 3; }
+.travelin-moment-4 { grid-column: span 3; grid-row: span 4; }
+.travelin-moment-5 { grid-column: span 5; grid-row: span 3; }
+.travelin-moment-6 { grid-column: span 4; grid-row: span 3; }
+
+/* -------------------------------------------------------------------------- */
+/* 10. BOOKING PROCESS STEPS                                                  */
+/* -------------------------------------------------------------------------- */
+.travelin-booking {
+    background-color: #e9ebe2;
+    padding: 120px 7% 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.travelin-booking__title {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 70px;
+}
+
+.travelin-booking__title h2 {
+    font-family: var(--travelin-serif);
+    font-size: clamp(38px, 4vw, 58px);
+    line-height: 1.1;
+    margin: 0;
+}
+
+.travelin-booking__title h2 em {
+    font-style: italic;
+    color: #556c5a;
+}
+
+.travelin-booking__steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+    max-width: 1320px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+.travelin-booking-step {
+    background: #e9ebe2;
+    border-radius: 8px;
+    padding: 32px 28px;
+    position: relative;
+    border-top: 2px solid rgba(38, 60, 50, 0.12);
+}
+
+.travelin-step-number {
+    display: block;
+    font-family: var(--travelin-serif);
+    font-style: italic;
+    font-size: 38px;
+    color: #7d8d66;
+    margin-bottom: 14px;
+    line-height: 1;
+}
+
+.travelin-booking-step h3 {
+    font-family: var(--travelin-serif);
+    font-size: 26px;
+    margin: 0 0 14px;
+    color: var(--travelin-foreground);
+    line-height: 1.2;
+}
+
+.travelin-booking-step p {
+    font-size: 14.5px;
+    line-height: 1.85;
+    color: #58695c;
+    margin: 0;
+}
+
+/* Responsive Overrides */
+@media (max-width: 900px) {
+    .travelin-pillar-card,
+    .travelin-pillar-card:nth-child(even),
+    .travelin-trip-card,
+    .travelin-host__inner,
+    .travelin-faq__inner,
+    .travelin-stories__header,
+    .travelin-stories__cards,
+    .travelin-booking__steps {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+
+    .travelin-trip-card__content {
+        padding: 32px;
+    }
+
+    .travelin-moments__grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: auto;
+    }
+
+    .travelin-moment-item {
+        grid-column: span 1 !important;
+        grid-row: auto !important;
+        height: 240px;
+    }
+}

@@ -1,0 +1,492 @@
+/**
+ * Travelin' Google Reviews Section Styles (Elementor Scoped)
+ * Replicates the editorial Google Reviews pinned scroll/cards & lightbox
+ */
+
+.travelin-reviews-scope {
+  --gr-bg: #fbfbf9;
+  --gr-foreground: #263c32;
+  --gr-muted: #64756b;
+  --gr-border: rgba(38, 60, 50, 0.11);
+  --gr-card-bg: #ffffff;
+  --gr-serif: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --gr-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Manrope", sans-serif;
+  background: var(--gr-bg);
+  color: var(--gr-foreground);
+  font-family: var(--gr-sans);
+  position: relative;
+  border-top: 1px solid rgba(38, 60, 50, 0.08);
+  border-bottom: 1px solid rgba(38, 60, 50, 0.08);
+  padding: clamp(60px, 8vh, 100px) 0 clamp(50px, 6vh, 80px);
+  overflow: hidden;
+}
+
+.gr-stage {
+  max-width: 1320px;
+  width: calc(100% - 80px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Centered Google Reviews Button Header */
+.gr-header-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: clamp(35px, 5vh, 60px);
+}
+
+.gr-google-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid rgba(38, 60, 50, 0.15);
+  border-radius: 9999px;
+  padding: 8px 20px;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(38, 60, 50, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--gr-foreground);
+}
+
+.gr-google-pill:hover {
+  transform: translateY(-2px);
+  background: #ffffff;
+  border-color: rgba(38, 60, 50, 0.28);
+  box-shadow: 0 6px 16px rgba(38, 60, 50, 0.09);
+  color: var(--gr-foreground);
+}
+
+.gr-google-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+.gr-badge-score {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: #263c32;
+}
+
+.gr-badge-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gr-star-icon.filled {
+  fill: #f59e0b;
+  color: #f59e0b;
+}
+
+.gr-badge-sep {
+  color: rgba(38, 60, 50, 0.3);
+  font-size: 11px;
+}
+
+.gr-badge-text {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1;
+  color: #4a5c52;
+}
+
+.gr-ext-icon {
+  color: #64756b;
+  transition: transform 0.2s ease;
+}
+
+.gr-google-pill:hover .gr-ext-icon {
+  transform: translate(2px, -2px);
+}
+
+/* Horizontal Cards Track & Container */
+.gr-grid-wrapper {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 16px 8px 32px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(38, 60, 50, 0.2) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gr-grid-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.gr-grid-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gr-grid-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(38, 60, 50, 0.2);
+  border-radius: 9999px;
+}
+
+.gr-cards-track {
+  display: flex;
+  gap: 32px;
+  width: max-content;
+}
+
+/* Editorial Review Cards with organic tilts */
+.gr-card {
+  width: clamp(340px, 28vw, 420px);
+  background: #ffffff;
+  border: 1px solid var(--gr-border);
+  border-radius: 22px;
+  padding: 32px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 28px rgba(38, 60, 50, 0.04);
+  position: relative;
+  flex-shrink: 0;
+  transform-origin: center center;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gr-card:nth-child(6n+1) { transform: rotate(-0.5deg); }
+.gr-card:nth-child(6n+2) { transform: rotate(0.6deg); }
+.gr-card:nth-child(6n+3) { transform: rotate(-0.4deg); }
+.gr-card:nth-child(6n+4) { transform: rotate(0.5deg); }
+.gr-card:nth-child(6n+5) { transform: rotate(-0.6deg); }
+.gr-card:nth-child(6n+6) { transform: rotate(0.4deg); }
+
+.gr-card:hover {
+  transform: translateY(-8px) scale(1.02) rotate(0deg) !important;
+  box-shadow: 0 22px 50px rgba(38, 60, 50, 0.12);
+  border-color: rgba(38, 60, 50, 0.28);
+  z-index: 5;
+}
+
+/* Card Header */
+.gr-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gr-author-block {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gr-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #263c32;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gr-card:hover .gr-avatar {
+  transform: scale(1.08);
+}
+
+.gr-author-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gr-author-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gr-author-name strong {
+  font-weight: 600;
+  font-size: 15.5px;
+  line-height: 1.2;
+  color: #263c32;
+}
+
+.gr-verified-tag {
+  color: #2b7a4b;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.gr-card:hover .gr-verified-tag {
+  transform: scale(1.15);
+}
+
+.gr-author-subtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #64756b;
+}
+
+.gr-tag-pill {
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  background: rgba(38, 60, 50, 0.06);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  color: #263c32;
+}
+
+.gr-tag-sep {
+  opacity: 0.4;
+}
+
+.gr-trip-name {
+  font-weight: 400;
+  font-size: 11.5px;
+  line-height: 1.2;
+  color: #55665d;
+}
+
+.gr-quote-icon {
+  color: rgba(38, 60, 50, 0.16);
+  flex-shrink: 0;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.gr-card:hover .gr-quote-icon {
+  color: rgba(38, 60, 50, 0.45);
+  transform: rotate(-8deg) scale(1.1);
+}
+
+/* Stars */
+.gr-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.gr-star.filled {
+  fill: #f59e0b;
+  color: #f59e0b;
+  transition: transform 0.25s ease;
+}
+
+.gr-card:hover .gr-star.filled {
+  transform: scale(1.08);
+}
+
+/* Review Text */
+.gr-review-text {
+  font-weight: 400;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: #314239;
+  margin: 4px 0 8px;
+  flex-grow: 1;
+}
+
+/* Photo Attachment */
+.gr-card-photo-box {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.gr-photo-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 175px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(38, 60, 50, 0.1);
+  padding: 0;
+  cursor: pointer;
+  background: #eee;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gr-thumbnail-wrap {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gr-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gr-photo-trigger:hover .gr-thumbnail {
+  transform: scale(1.07);
+}
+
+.gr-photo-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(16, 43, 40, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.gr-photo-trigger:hover .gr-photo-badge {
+  background: rgba(16, 43, 40, 0.96);
+  transform: translateY(-2px);
+}
+
+/* Lightbox Modal */
+.gr-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(16, 30, 24, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.gr-lightbox-backdrop.is-active {
+  display: flex;
+  animation: grFadeIn 0.28s ease-out forwards;
+}
+
+@keyframes grFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gr-lightbox-content {
+  position: relative;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  background: #1b2e25;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  animation: grZoomIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes grZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gr-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gr-lightbox-close:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1) rotate(90deg);
+}
+
+.gr-lightbox-image-wrap {
+  width: 100%;
+  max-height: 70vh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gr-lightbox-image {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+
+.gr-lightbox-caption {
+  padding: 18px 24px;
+  color: #ffffff;
+  background: #16261f;
+}
+
+.gr-lightbox-caption span {
+  display: block;
+  font-weight: 600;
+  font-size: 12px;
+  color: #a4b8ad;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.gr-lightbox-caption p {
+  font-weight: 400;
+  font-size: 15px;
+  color: #f1f4f2;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .travelin-reviews-scope {
+    padding: 36px 0 30px;
+  }
+  .gr-cards-track {
+    gap: 18px;
+  }
+  .gr-card {
+    width: clamp(290px, 82vw, 340px);
+    padding: 24px 20px 18px;
+  }
+  .gr-photo-trigger {
+    height: 150px;
+  }
+}

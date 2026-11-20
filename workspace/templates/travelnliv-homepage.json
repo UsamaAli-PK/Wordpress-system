@@ -1,0 +1,570 @@
+[
+  {
+    "id": "sec_hero",
+    "elType": "section",
+    "settings": {
+      "layout": "full_width"
+    },
+    "elements": [
+      {
+        "id": "col_hero",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_hero",
+            "elType": "widget",
+            "widgetType": "travelin-hero",
+            "settings": {
+              "title_line_1": "Go somewhere new",
+              "title_line_2": "with people who are",
+              "title_line_3_italic": "up for it.",
+              "intro_lead": "Come on your own.\nWe\u2019ll get the group together,\narrange the stay,\nand plan the days out.",
+              "action_lead": "We make the girl trips\nout of the group chat.\nGo somewhere new with\nthe people who are up for it.",
+              "btn_text": "Find Your Trip",
+              "btn_url": {
+                "url": "#trips"
+              },
+              "btn_note": "4\u20135-star stays \u00b7 Payment plans on most trips",
+              "video_url": "/media/door-journey.mp4",
+              "poster_image": {
+                "url": "/media/door-poster.webp"
+              },
+              "enable_clouds": "yes"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_pillars",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_pillars",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_pillars",
+            "elType": "widget",
+            "widgetType": "travelin-pillars",
+            "settings": {
+              "intro_eyebrow": "THE TRAVEL & LIV WAY",
+              "intro_title": "There\u2019s a whole trip behind",
+              "intro_title_italic": "those laughing videos.",
+              "intro_description": "The days out. The conversations over dinner. Someone getting everyone up to dance. Those are the moments we make room for, along with time to head off on your own or do nothing for a while.",
+              "chapters_list": [
+                {
+                  "chapter_label": "The stay",
+                  "chapter_title": "Somewhere you\u2019ll enjoy coming back to.",
+                  "chapter_text": "We choose 4\u20135-star stays because the room, the setting, and time to relax matter too. Each trip page shows where you\u2019ll stay and the rooms you can book.",
+                  "image_1": {
+                    "url": "/media/phuket-villa-real.webp"
+                  },
+                  "image_2": {
+                    "url": "/media/moment-1.webp"
+                  },
+                  "image_3": {
+                    "url": "/media/filler/filler-12.webp"
+                  }
+                },
+                {
+                  "chapter_label": "The days out",
+                  "chapter_title": "Plans you don\u2019t have to pull together.",
+                  "chapter_text": "We arrange the stay and scheduled group activities. You can see the plans before you book, including what\u2019s covered and where there\u2019s time for yourself.",
+                  "image_1": {
+                    "url": "/media/moment-6.webp"
+                  },
+                  "image_2": {
+                    "url": "/media/filler/filler-08.webp"
+                  },
+                  "image_3": {
+                    "url": "/media/punta-cana-catamaran.webp"
+                  }
+                },
+                {
+                  "chapter_label": "The people",
+                  "chapter_title": "An introduction when you need one.",
+                  "chapter_text": "You don\u2019t have to walk in and work the room. Olivia gets people talking and laughing, and helps you join in at your own pace.",
+                  "image_1": {
+                    "url": "/media/moment-5.webp"
+                  },
+                  "image_2": {
+                    "url": "/media/filler/filler-07.webp"
+                  },
+                  "image_3": {
+                    "url": "/media/filler/filler-02.webp"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_experience",
+    "elType": "section",
+    "settings": {
+      "layout": "full_width"
+    },
+    "elements": [
+      {
+        "id": "col_experience",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_experience",
+            "elType": "widget",
+            "widgetType": "travelin-experience",
+            "settings": {
+              "eyebrow": "A MOMENT WITH THE GROUP",
+              "title_prefix": "You had to",
+              "title_italic": "be there.",
+              "video_url": "https://www.travelnliv.com/travelnliv_who.mp4",
+              "poster_image": {
+                "url": "/media/collective-gala.webp"
+              },
+              "play_label": "Watch the experience",
+              "enable_ambient_btn": "yes"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_trips",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_trips",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_trips",
+            "elType": "widget",
+            "widgetType": "travelin-trips-carousel",
+            "settings": {
+              "section_title": "Where would you",
+              "section_title_italic": "like to go?",
+              "section_subtitle": "See how the dates fit around work.\nThen take a look at where we\u2019ll stay\nand what we\u2019ll do together.",
+              "trips_list": [
+                {
+                  "destination_name": "Brazil",
+                  "region": "RIO DE JANEIRO",
+                  "mood_line": "A little rhythm.<br>A whole lot of Rio.",
+                  "tag": "Dec 2026 \u00b7 Small Group",
+                  "duration": "7 Days",
+                  "dates": "Dec 2026 \u00b7 Small Group",
+                  "price": "From $2,850",
+                  "price_note": "Listed per person \u00b7 Small group \u00b7 Flights extra",
+                  "trip_image": {
+                    "url": "/media/brazil-hero.webp"
+                  },
+                  "cta_label": "Explore this trip",
+                  "link_url": {
+                    "url": "/trips/brazil"
+                  }
+                },
+                {
+                  "destination_name": "Punta Cana",
+                  "region": "DOMINICAN REPUBLIC",
+                  "mood_line": "Good company.<br>Caribbean time.",
+                  "tag": "SINGLES TRIP",
+                  "duration": "6 Days",
+                  "dates": "Feb 2027 \u00b7 Singles",
+                  "price": "From $2,450",
+                  "price_note": "Singles ages 25\u201340 \u00b7 Application required \u00b7 Flights extra",
+                  "trip_image": {
+                    "url": "/media/punta-cana-hero.webp"
+                  },
+                  "cta_label": "Explore this trip",
+                  "link_url": {
+                    "url": "/trips/punta-cana"
+                  }
+                },
+                {
+                  "destination_name": "Phuket",
+                  "region": "THAILAND",
+                  "mood_line": "Take the long way<br>to the beach.",
+                  "tag": "Villa & Sea",
+                  "duration": "8 Days",
+                  "dates": "Mar 2027 \u00b7 Villa & Sea",
+                  "price": "From $3,100",
+                  "price_note": "5-star hilltop villa \u00b7 Private chef \u00b7 Small group",
+                  "trip_image": {
+                    "url": "/media/phuket-hero.webp"
+                  },
+                  "cta_label": "Explore this trip",
+                  "link_url": {
+                    "url": "/trips/phuket"
+                  }
+                },
+                {
+                  "destination_name": "China",
+                  "region": "CHENGDU & ANCIENT TOWNS",
+                  "mood_line": "Ancient alleys.<br>Modern momentum.",
+                  "tag": "Small Group",
+                  "duration": "9 Days",
+                  "dates": "Autumn 2027 \u00b7 Hosted departure",
+                  "price": "From $3,400",
+                  "price_note": "Culture, mountain temples & culinary immersion",
+                  "trip_image": {
+                    "url": "/media/china-hero.webp"
+                  },
+                  "cta_label": "Explore this trip",
+                  "link_url": {
+                    "url": "/trips/china"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_stories",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_stories",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_stories",
+            "elType": "widget",
+            "widgetType": "travelin-stories",
+            "settings": {
+              "heading_line_1": "Who\u2019s coming",
+              "heading_line_2_italic": "with you?",
+              "paragraph_1": "People who enjoy a day out, a good meal, and getting to know someone new. Most book solo; friends and couples join too.",
+              "paragraph_2": "You can start getting to know each other in the trip chat before departure. And Olivia will be there for the first hello.",
+              "reels_list": [
+                {
+                  "video_url": "/media/Testimonuals/reel_1.mp4",
+                  "aria_label": "Travel & LIV collective moment 1"
+                },
+                {
+                  "video_url": "/media/Testimonuals/reel_2.mp4",
+                  "aria_label": "Travel & LIV collective moment 2"
+                },
+                {
+                  "video_url": "/media/Testimonuals/reel_3.mp4",
+                  "aria_label": "Travel & LIV collective moment 3"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_reviews",
+    "elType": "section",
+    "settings": {
+      "layout": "full_width"
+    },
+    "elements": [
+      {
+        "id": "col_reviews",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_reviews",
+            "elType": "widget",
+            "widgetType": "travelin-google-reviews",
+            "settings": {
+              "google_score": "5.0",
+              "badge_label": "Google Reviews",
+              "google_url": {
+                "url": "https://share.google/NVLZTqQg771xWsmAo",
+                "is_external": true
+              },
+              "reviews_list": [
+                {
+                  "author": "Taylor S.",
+                  "initials": "TS",
+                  "role_tag": "Booked Solo",
+                  "trip_name": "Punta Cana Singles Trip",
+                  "rating": 5,
+                  "review_text": "I was so nervous to book a trip by myself, but Olivia made everyone feel like family within the first ten minutes of the welcome mixer. The catamaran day was hands down one of the best days of my life! If you\u2019re on the fence about going solo, just book it.",
+                  "photo": {
+                    "url": "/media/punta-cana-catamaran.webp"
+                  },
+                  "photo_alt": "Private catamaran day on Caribbean waters"
+                },
+                {
+                  "author": "Brianna M.",
+                  "initials": "BM",
+                  "role_tag": "Verified Traveler",
+                  "trip_name": "Dominican Republic Escape",
+                  "rating": 5,
+                  "review_text": "This wasn\u2019t just a vacation, it was genuine community. Everything from the 5-star resort to the off-road buggies and private dinners was curated to perfection. We literally have a group chat that talks every single day still!",
+                  "photo": {
+                    "url": "/media/punta-cana-mixer.webp"
+                  },
+                  "photo_alt": "Sunset all-white welcome mixer"
+                },
+                {
+                  "author": "Chloe D.",
+                  "initials": "CD",
+                  "role_tag": "Booked Solo",
+                  "trip_name": "Bali & Tropical Retreats",
+                  "rating": 5,
+                  "review_text": "Getting out of the group chat is so real! My friends always talk about traveling but cancel last minute. Travel & LIV took care of every single logistical headache. Olivia is hilarious, attentive, and an unmatched host.",
+                  "photo": {
+                    "url": "/media/collective-gala.webp"
+                  },
+                  "photo_alt": "Gala evening celebration with the collective"
+                },
+                {
+                  "author": "Jasmine R.",
+                  "initials": "JR",
+                  "role_tag": "Verified Traveler",
+                  "trip_name": "Rio de Janeiro Getaway",
+                  "rating": 5,
+                  "review_text": "The balance between planned excursions and free poolside time was chef\u2019s kiss. No tourist traps\u2014just immaculate vibes, beautiful sunsets, and incredible women who are actually down to explore.",
+                  "photo": {
+                    "url": "/media/brazil-catamaran-party.webp"
+                  },
+                  "photo_alt": "Private boat excursion in Rio"
+                },
+                {
+                  "author": "Ashley K.",
+                  "initials": "AK",
+                  "role_tag": "Booked Solo",
+                  "trip_name": "Punta Cana Escape",
+                  "rating": 5,
+                  "review_text": "The private dinners and VIP airport transfers were top tier. As a solo traveler safety was my #1 priority, and I never felt anything less than 100% safe and looked after the entire week. 10/10 experience!",
+                  "photo": {
+                    "url": "/media/moment-5.webp"
+                  },
+                  "photo_alt": "Shared sunset dinner on the terrace"
+                },
+                {
+                  "author": "Morgan L.",
+                  "initials": "ML",
+                  "role_tag": "Verified Traveler",
+                  "trip_name": "Caribbean Hosted Experience",
+                  "rating": 5,
+                  "review_text": "Olivia has this natural gift of bringing people together. By day two it felt like I was on vacation with childhood best friends. Already planning my second trip with the collective for 2026!",
+                  "photo": {
+                    "url": "/media/collective-film-cocktails.webp"
+                  },
+                  "photo_alt": "Cocktails and golden hour laughter"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_host",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_host",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_host",
+            "elType": "widget",
+            "widgetType": "travelin-host-bio",
+            "settings": {
+              "host_photo": {
+                "url": "/media/olivia.webp"
+              },
+              "photo_caption": "Olivia Owen / Your host, every time.",
+              "eyebrow": "MEET THE PERSON BRINGING YOU TOGETHER",
+              "heading_lines": "Olivia is the one<br>getting everyone<br><em>laughing.</em>",
+              "bio_paragraph_1": "Olivia Owen knows what it\u2019s like to want to travel and not have someone to go with. Her own solo travels helped inspire Travel & LIV.",
+              "bio_paragraph_2": "She has a knack for bringing people into the conversation. An introduction here, a joke there, a little help getting past the first hello.",
+              "bio_paragraph_3": "She also plans and personally hosts every trip. So the person who put it together is right there with you.",
+              "cta_link_text": "Ask Olivia a question",
+              "cta_link_url": {
+                "url": "mailto:Info@travelnliv.com"
+              },
+              "signature_text": "See you out there,",
+              "signature_name": "Olivia"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_moments",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_moments",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_moments",
+            "elType": "widget",
+            "widgetType": "travelin-moments-strip",
+            "settings": {
+              "title_line_1": "A few days away.",
+              "title_line_2_italic": "A lot to come home with.",
+              "photos_list": [
+                {
+                  "image": {
+                    "url": "/media/moment-1.webp"
+                  },
+                  "alt_text": "A shared dinner table with the collective"
+                },
+                {
+                  "image": {
+                    "url": "/media/moment-5.webp"
+                  },
+                  "alt_text": "Exploring coastal streets and landmarks together"
+                },
+                {
+                  "image": {
+                    "url": "/media/collective-film-terrace.webp"
+                  },
+                  "alt_text": "Panoramic skyline terrace view"
+                },
+                {
+                  "image": {
+                    "url": "/media/collective-film-cocktails.webp"
+                  },
+                  "alt_text": "Cocktails and conversations at golden hour"
+                },
+                {
+                  "image": {
+                    "url": "/media/collective-skyline.webp"
+                  },
+                  "alt_text": "A view over the city lights"
+                },
+                {
+                  "image": {
+                    "url": "/media/group.webp"
+                  },
+                  "alt_text": "The Travel & LIV collective together"
+                },
+                {
+                  "image": {
+                    "url": "/media/moment-8.webp"
+                  },
+                  "alt_text": "Relaxed evening smiles on a hosted departure"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_faq",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_faq",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_faq",
+            "elType": "widget",
+            "widgetType": "travelin-faq",
+            "settings": {
+              "eyebrow": "A FEW THINGS YOU MIGHT BE WONDERING",
+              "heading_line_1": "Before",
+              "heading_line_2_italic": "you book.",
+              "lead_text": "Your money. Your time off.\nYour first group trip.\nLet\u2019s talk about it.",
+              "ask_link_text": "Ask us anything",
+              "ask_link_url": {
+                "url": "mailto:Info@travelnliv.com"
+              },
+              "all_link_text": "All questions",
+              "all_link_url": {
+                "url": "/faq"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_booking",
+    "elType": "section",
+    "settings": {},
+    "elements": [
+      {
+        "id": "col_booking",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_booking",
+            "elType": "widget",
+            "widgetType": "travelin-booking-steps",
+            "settings": {
+              "heading_line_1": "Found your trip?",
+              "heading_line_2_italic": "Here\u2019s what happens next."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sec_final_cta",
+    "elType": "section",
+    "settings": {
+      "layout": "full_width"
+    },
+    "elements": [
+      {
+        "id": "col_final_cta",
+        "elType": "column",
+        "settings": {},
+        "elements": [
+          {
+            "id": "w_final_cta",
+            "elType": "widget",
+            "widgetType": "travelin-final-cta",
+            "settings": {
+              "bg_image": {
+                "url": "/media/phuket-maya-lagoon.webp"
+              },
+              "eyebrow": "MAKE YOUR MOVE",
+              "heading_line_1": "You\u2019ll either be on the next trip\u2026",
+              "heading_line_2_italic": "or watching it on Instagram.",
+              "subtitle": "Find the dates that work for you,\nand come join Olivia and the group.",
+              "btn_text": "Choose Your Trip",
+              "btn_url": {
+                "url": "/trips"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

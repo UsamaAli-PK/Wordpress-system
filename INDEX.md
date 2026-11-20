@@ -122,7 +122,9 @@ Master routing table for documentation, standards, playbooks, and templates.
 
 - [boilerplates/README.md](file:///root/Desktop/learn/BAse/boilerplates/README.md) — Master guide for starter templates and extracted features.
 - [theme/](file:///root/Desktop/learn/BAse/boilerplates/theme/README.md) — Base Classic Theme (PHP 8.1+, Elementor Theme Locations API, native PHP semantic fallbacks, CSS token bridge).
-- [companion-plugin/](file:///root/Desktop/learn/BAse/boilerplates/companion-plugin/README.md) — Agency Companion Plugin (PSR-4 autoloader, lifecycle hooks, REST CPT registry, modern widget loader).
+- [companion-plugin/](file:///root/Desktop/learn/BAse/boilerplates/companion-plugin/README.md) — Agency Companion Plugin (PSR-4 autoloader, lifecycle hooks, REST CPT registry, modern widget loader with 11 Travelin widgets).
+- [Travelin Widgets Suite](file:///root/Desktop/learn/BAse/boilerplates/companion-plugin/src/Elementor/Widgets/Travelin/) — 11 modular Elementor widgets (Hero, Pillars, Experience Film, Trips Carousel, Story Reels, Google Reviews, Host Bio, Moments Strip, FAQ, Booking Steps, Final CTA).
+- [Travelin Homepage Elementor Template](file:///root/Desktop/learn/BAse/workspace/templates/travelnliv-homepage.json) — 1-click importable Elementor container layout assembling all 11 widgets.
 - [widget-template/](file:///root/Desktop/learn/BAse/boilerplates/widget-template/README.md) — Elementor Widget Boilerplate (extending `\Elementor\Widget_Base`, repeaters, group controls, ES6 frontend handler, Backbone live template).
 - [First Extracted Feature: ScrollToTop](file:///root/Desktop/learn/BAse/boilerplates/companion-plugin/src/Extracted/Astra/ScrollToTop.php) — Extracted from Astra theme, decoupled from theme options, rewritten with pure native vanilla ES6 (zero jQuery).
 
@@ -132,9 +134,11 @@ Master routing table for documentation, standards, playbooks, and templates.
 
 - [documentation/README.md](file:///root/Desktop/learn/BAse/documentation/README.md) — Extraction-ready developer documentation for test subjects.
 - [documentation/APPROACH.md](file:///root/Desktop/learn/BAse/documentation/APPROACH.md) — Reproducible 9-step audit and reconnaissance strategy with exact grep commands.
+- [Decoupling & Conversion Strategy](file:///root/Desktop/learn/BAse/documentation/decoupling-and-conversion-strategy.md) — Master architectural blueprint: decompiling any external web stack (Next.js, React, Astro, Vue) into modular Elementor widgets with 100% visual editability and DOM parity.
 - [Astra Theme Audit](file:///root/Desktop/learn/BAse/documentation/themes/astra/01-overview.md) — Complete 5-document mapping covering architecture, dynamic CSS compositor, 650 hooks, and extraction recipes.
 - [Premium Addons Audit](file:///root/Desktop/learn/BAse/documentation/plugins/premium-addons-for-elementor/01-overview.md) — Complete 5-document mapping covering MCP REST API, OAuth, assets scanner, and widget deep dives.
-- [Travelin' Website Audit](file:///root/Desktop/learn/BAse/documentation/external-projects/travelin-website.md) — Full stack Next.js 16 + Payload CMS + Tailwind 4 mapping, page routes, and candidate conversion components (3D Globe, Arc Gallery, Reviews, Hero).
+- [Travelin' Website Audit](file:///root/Desktop/learn/BAse/documentation/external-projects/travelin-website.md) — Full stack Next.js 16 + Payload CMS + Tailwind 4 mapping, page routes, and candidate conversion components.
+- [Live Test Deployment Guide](file:///root/Desktop/learn/BAse/workspace/Test-wordpress-website.md) — Production MariaDB + PHP 8.3 FPM + Elementor 4.4.1 live verification site (`https://website.n8nbyusama.tech`).
 
 ---
 
