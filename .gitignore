@@ -13,6 +13,10 @@ application-passwords.txt
 /vendor/
 /node_modules/
 
+# Vendor Archives & Large Test Downloads
+/workspace/downloads/
+*.zip
+
 # Database dumps & Logs
 *.sql
 *.sql.gz

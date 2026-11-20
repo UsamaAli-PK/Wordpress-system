@@ -1,0 +1,32 @@
+/**
+ * Theme Design Tokens & Elementor Kit Bridge
+ *
+ * Defaults apply if Elementor is inactive. If Elementor Kit is active,
+ * CSS custom properties seamlessly inherit Elementor global tokens.
+ */
+:root {
+    /* Layout */
+    --base-container-width: var(--e-global-container-width, 1200px);
+    --base-spacing-xs: 0.5rem;
+    --base-spacing-sm: 1rem;
+    --base-spacing-md: 1.5rem;
+    --base-spacing-lg: 2.5rem;
+    --base-spacing-xl: 4rem;
+
+    /* Color Palette — Native fallbacks with Elementor Kit overrides */
+    --base-primary-color: var(--e-global-color-primary, #2563eb);
+    --base-primary-hover: #1d4ed8;
+    --base-secondary-color: var(--e-global-color-secondary, #475569);
+    --base-text-color: var(--e-global-color-text, #1f2937);
+    --base-accent-color: var(--e-global-color-accent, #f59e0b);
+    --base-bg-color: #ffffff;
+    --base-surface-color: #f8fafc;
+    --base-border-color: #e2e8f0;
+
+    /* Typography */
+    --base-font-family: var(--e-global-typography-primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    --base-font-size: 1rem;
+    --base-line-height: 1.6;
+    --base-heading-family: var(--e-global-typography-secondary-font-family, var(--base-font-family));
+    --base-heading-weight: 700;
+}
